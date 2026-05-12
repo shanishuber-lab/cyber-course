@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>יחידה 2 — פורטים ותקשורת ברשת</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&family=Heebo:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #040E1C;
+      --bg-mid:     #0B2E4F;
+      --glass:      rgba(8, 28, 52, 0.55);
+      --accent:     #1EC6FF;
+      --accent-hi:  #5BE0FF;
+      --accent-str: #00AEEF;
+      --glow:       rgba(30, 198, 255, 0.35);
+      --glow-str:   rgba(30, 198, 255, 0.6);
+      --text:       #FFFFFF;
+      --text-2:     #C7D3E0;
+      --text-3:     #7F9BB3;
+      --border:     rgba(30, 198, 255, 0.14);
+      --green:      #00DC78;
+      --red:        #FF5050;
+      --purple:     #A855F7;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); }
+    h1, h2, h3 { font-family: 'Rubik', sans-serif; font-weight: 900; }
+
+    /* ── Background ── */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(30,198,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,198,255,0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .bg-blob { position: fixed; z-index: 0; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+    .bg-blob-1 { width:500px; height:500px; top:-160px; left:-100px; background: radial-gradient(circle, rgba(30,198,255,0.09), transparent 70%); }
+    .bg-blob-2 { width:400px; height:400px; bottom:-100px; right:-80px; background: radial-gradient(circle, rgba(0,80,160,0.14), transparent 70%); }
+
+    /* ── Shell ── */
+    .app { position:relative; z-index:1; display:flex; flex-direction:column; height:100dvh; max-width:680px; margin:0 auto; }
+
+    /* ── Progress ── */
+    .progress-bar { height:3px; background:rgba(30,198,255,0.08); overflow:hidden; }
+    .progress-fill {
+      height:100%; background:linear-gradient(90deg,var(--accent-str),var(--accent-hi));
+      box-shadow:0 0 12px var(--glow-str); transition:width 0.5s cubic-bezier(.4,0,.2,1); position:relative;
+    }
+    .progress-fill::after {
+      content:''; position:absolute; top:0; right:0; width:40px; height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4));
+      animation:shimmer 2s linear infinite;
+    }
+    @keyframes shimmer { 0%{transform:translateX(40px);opacity:0} 50%{opacity:1} 100%{transform:translateX(-200px);opacity:0} }
+
+    /* ── Header ── */
+    .unit-header { padding:11px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:rgba(4,14,28,0.7); backdrop-filter:blur(10px); }
+    .unit-badge { font-family:'Rubik',sans-serif; font-weight:700; font-size:11px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:6px; }
+    .badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--glow-str); animation:blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .screen-counter { font-size:12px; color:var(--text-3); }
+
+    /* ── Screens ── */
+    .screens { flex:1; overflow:hidden; position:relative; }
+    .screen { position:absolute; inset:0; display:flex; flex-direction:column; padding:20px 20px 8px; overflow-y:auto; opacity:0; pointer-events:none; transform:translateX(-30px); transition:opacity 0.3s ease,transform 0.3s ease; }
+    .screen.active { opacity:1; pointer-events:all; transform:translateX(0); }
+    .screen.exit   { opacity:0; transform:translateX(30px); pointer-events:none; }
+
+    /* ── Atoms ── */
+    .glass { background:var(--glass); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid var(--border); border-radius:16px; }
+    .eyebrow { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2.5px; text-transform:uppercase; margin-bottom:10px; }
+    .grad { background:linear-gradient(135deg,#fff 10%,var(--accent-hi) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .section-title { font-size:22px; margin-bottom:14px; }
+    .gap { margin-bottom:12px; }
+
+    /* ── Hook ── */
+    .hook-title { font-size:clamp(22px,5.5vw,32px); line-height:1.2; margin-bottom:8px; }
+    .city-card { padding:22px 20px; text-align:center; margin-bottom:16px; position:relative; overflow:hidden; }
+    .city-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(30,198,255,0.08),transparent 65%); pointer-events:none; }
+    .city-ring { width:88px; height:88px; border-radius:50%; background:rgba(30,198,255,0.06); border:1px solid rgba(30,198,255,0.2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-size:40px; animation:pulse-ring 3s ease-in-out infinite; position:relative; z-index:1; }
+    @keyframes pulse-ring { 0%,100%{box-shadow:0 0 0 0 rgba(30,198,255,0.25),0 0 20px rgba(30,198,255,0.1)} 50%{box-shadow:0 0 0 14px rgba(30,198,255,0),0 0 30px rgba(30,198,255,0.2)} }
+    .city-stat { font-family:'Rubik',sans-serif; font-weight:900; font-size:40px; line-height:1; background:linear-gradient(135deg,var(--accent),var(--accent-hi)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 16px rgba(30,198,255,0.5)); position:relative; z-index:1; }
+    .city-stat-label { font-size:12px; color:var(--text-3); margin-top:6px; position:relative; z-index:1; }
+    .stat-question { font-family:'Rubik',sans-serif; font-weight:900; font-size:64px; line-height:1; color:rgba(30,198,255,0.2); }
+    .stat-hint { font-size:13px; color:var(--text-3); margin:6px 0 14px; }
+    .reveal-btn { background:rgba(30,198,255,0.08); border:1px solid rgba(30,198,255,0.28); border-radius:8px; padding:9px 22px; font-family:'Rubik',sans-serif; font-weight:700; font-size:13px; color:var(--accent); cursor:pointer; transition:all 0.2s ease; }
+    .reveal-btn:hover { background:rgba(30,198,255,0.16); box-shadow:0 0 16px rgba(30,198,255,0.2); }
+    #stat-visible { animation:fadeUp 0.4s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .hook-body { font-size:15px; color:var(--text-2); line-height:1.7; padding:14px 16px; border-right:2px solid var(--accent); }
+    .hook-body strong { color:var(--accent-hi); }
+
+    /* ── Objectives ── */
+    .obj-list { display:flex; flex-direction:column; gap:10px; }
+    .obj-item { display:flex; align-items:flex-start; gap:14px; padding:14px 16px; border-radius:14px; background:var(--glass); backdrop-filter:blur(16px); border:1px solid var(--border); transition:border-color 0.25s; }
+    .obj-item:hover { border-color:rgba(30,198,255,0.35); }
+    .obj-num { width:30px; height:30px; flex-shrink:0; background:linear-gradient(135deg,rgba(30,198,255,0.2),rgba(0,174,239,0.1)); border:1px solid rgba(30,198,255,0.25); border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Rubik',sans-serif; font-weight:900; font-size:13px; color:var(--accent); }
+    .obj-text { font-size:14px; line-height:1.45; padding-top:4px; }
+
+    /* ── Concept pill ── */
+    .concept-pill { background:linear-gradient(135deg,rgba(30,198,255,0.1),rgba(0,174,239,0.04)); border:1px solid rgba(30,198,255,0.22); border-radius:12px; padding:13px 16px; font-size:14px; color:var(--text-2); line-height:1.55; margin-bottom:12px; }
+    .concept-pill strong { color:var(--accent-hi); font-family:'Rubik',sans-serif; }
+
+    /* ── Analogy card ── */
+    .analogy-card { padding:14px 16px; margin-bottom:12px; }
+    .analogy-label { font-size:10px; color:var(--text-3); font-family:'Rubik',sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
+    .analogy-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid rgba(30,198,255,0.07); }
+    .analogy-row:last-child { border-bottom:none; }
+    .analogy-emoji { font-size:20px; width:28px; text-align:center; flex-shrink:0; }
+    .analogy-source { font-size:13px; color:var(--text-3); flex:1; }
+    .analogy-eq { font-size:12px; color:var(--accent); font-family:'Rubik',sans-serif; font-weight:700; }
+    .analogy-target { font-size:13px; color:var(--text); font-family:'Rubik',sans-serif; font-weight:700; }
+
+    /* ── Multiple choice ── */
+    .mc-block { background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:14px; }
+    .mc-q { font-size:14px; color:var(--text-2); margin-bottom:12px; line-height:1.4; }
+    .mc-options { display:flex; flex-direction:column; gap:7px; }
+    .mc-opt { background:rgba(30,198,255,0.04); border:1px solid rgba(30,198,255,0.15); border-radius:9px; padding:10px 14px; font-size:14px; color:var(--text-2); cursor:pointer; text-align:right; transition:all 0.2s; }
+    .mc-opt:hover { border-color:rgba(30,198,255,0.35); background:rgba(30,198,255,0.08); }
+    .mc-opt.correct { border-color:var(--green); background:rgba(0,220,120,0.08); color:var(--green); pointer-events:none; }
+    .mc-opt.wrong   { border-color:var(--red);   background:rgba(255,80,80,0.08);   color:var(--red);   pointer-events:none; animation:shake 0.3s ease; }
+    .mc-opt.reveal  { border-color:var(--green); color:var(--green); pointer-events:none; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 30%{transform:translateX(-4px)} 70%{transform:translateX(4px)} }
+
+    /* ── Classify ── */
+    .classify-list { display:flex; flex-direction:column; gap:10px; }
+    .classify-row { background:var(--glass); border:1px solid var(--border); border-radius:13px; padding:12px 14px; }
+    .classify-scenario { font-size:14px; color:var(--text-2); margin-bottom:10px; }
+    .classify-btns { display:flex; gap:7px; }
+    .cls-btn { flex:1; padding:8px 4px; background:rgba(30,198,255,0.05); border:1px solid rgba(30,198,255,0.18); border-radius:8px; font-family:'Rubik',sans-serif; font-weight:700; font-size:13px; color:var(--text-3); cursor:pointer; transition:all 0.2s; }
+    .cls-btn:hover { background:rgba(30,198,255,0.12); color:var(--text); }
+    .cls-btn.correct { background:rgba(0,220,120,0.1); border-color:var(--green); color:var(--green); pointer-events:none; }
+    .cls-btn.wrong   { background:rgba(255,80,80,0.08); border-color:var(--red);   color:var(--red);   pointer-events:none; }
+    .cls-btn.reveal  { border-color:var(--green); color:var(--green); pointer-events:none; }
+
+    /* ── Reveal block ── */
+    .reveal-block { background:rgba(30,198,255,0.05); border:1px dashed rgba(30,198,255,0.28); border-radius:12px; padding:14px; text-align:center; cursor:pointer; transition:all 0.2s ease; margin-bottom:10px; }
+    .reveal-block:hover { background:rgba(30,198,255,0.11); border-color:rgba(30,198,255,0.5); }
+    .reveal-block-label { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--accent); }
+    .reveal-answer { background:var(--glass); border:1px solid rgba(30,198,255,0.15); border-right:3px solid var(--accent); border-radius:12px; padding:16px; animation:fadeUp 0.3s ease; }
+    .reveal-answer-label { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+    .reveal-answer-text { font-size:14px; color:var(--text-2); line-height:1.65; }
+    .reveal-answer-text strong { color:var(--accent-hi); }
+
+    /* ── Example cards ── */
+    .example-cards { display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+    .example-card { display:flex; align-items:flex-start; gap:12px; padding:13px 14px; background:var(--glass); border:1px solid var(--border); border-radius:13px; }
+    .ex-icon { font-size:28px; flex-shrink:0; }
+    .ex-title { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--text); margin-bottom:4px; }
+    .ex-desc { font-size:12px; color:var(--text-3); line-height:1.5; }
+
+    /* ── Flow steps ── */
+    .flow-steps { display:flex; flex-direction:column; gap:0; margin-bottom:12px; }
+    .flow-step { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; }
+    .flow-step:not(:last-child) { border-bottom:1px solid var(--border); }
+    .flow-num { width:22px; height:22px; flex-shrink:0; background:rgba(30,198,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Rubik',sans-serif; font-weight:900; font-size:11px; color:var(--accent); margin-top:1px; }
+    .flow-text { font-size:13px; color:var(--text-2); line-height:1.45; }
+
+    /* ── Section divider ── */
+    .section-divider { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; margin:14px 0 10px; display:flex; align-items:center; gap:8px; }
+    .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── Expandable detail ── */
+    .pp-toggle { font-size:11px; color:var(--accent); font-family:'Rubik',sans-serif; font-weight:700; cursor:pointer; margin-top:8px; display:block; letter-spacing:0.5px; }
+    .pp-toggle:hover { color:var(--accent-hi); }
+    .pp-detail { font-size:12px; color:var(--text-2); line-height:1.6; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); animation:fadeUp 0.25s ease; }
+
+    /* ── Expandable comp item ── */
+    .comp-list { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+    .comp-item { background:var(--glass); border:1px solid var(--border); border-radius:12px; padding:11px 14px; cursor:pointer; transition:border-color 0.2s; }
+    .comp-item:hover { border-color:rgba(30,198,255,0.3); }
+    .comp-item-header { display:flex; align-items:center; justify-content:space-between; }
+    .comp-item-left { display:flex; align-items:center; gap:10px; }
+    .comp-item-icon { font-size:22px; }
+    .comp-chip-name { font-family:'Rubik',sans-serif; font-weight:700; font-size:13px; color:var(--accent); display:block; }
+    .comp-chip-en { font-size:10px; color:var(--text-3); display:block; }
+    .comp-item-arrow { font-size:13px; color:var(--accent); font-family:'Rubik',sans-serif; font-weight:700; flex-shrink:0; }
+    .comp-item-detail { font-size:13px; color:var(--text-2); line-height:1.65; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); animation:fadeUp 0.25s ease; }
+    .comp-item-detail strong { color:var(--accent-hi); }
+
+    /* ── Activity banner ── */
+    .activity-banner { background:linear-gradient(135deg,rgba(30,198,255,0.1),rgba(0,174,239,0.04)); border:1px solid rgba(30,198,255,0.22); border-radius:14px; padding:12px 16px; margin-bottom:14px; }
+    .activity-tag { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+    .activity-instruction { font-size:13px; color:var(--text-2); }
+
+    /* ── Success ── */
+    .check-success { text-align:center; font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--green); background:rgba(0,220,120,0.07); border:1px solid rgba(0,220,120,0.25); border-radius:10px; padding:12px; animation:fadeUp 0.3s ease; }
+
+    /* ── Video placeholder ── */
+    .video-ph { aspect-ratio:16/9; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; margin-bottom:12px; position:relative; overflow:hidden; background:rgba(4,14,28,0.7); border:1px solid var(--border); }
+    .video-ph::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(30,198,255,0.05),transparent 60%); }
+    .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent 0%,rgba(30,198,255,0.5) 40%,rgba(91,224,255,0.8) 50%,rgba(30,198,255,0.5) 60%,transparent 100%); animation:scan 4s linear infinite; top:0; }
+    @keyframes scan { 0%{top:0%;opacity:0} 5%{opacity:1} 95%{opacity:1} 100%{top:100%;opacity:0} }
+    .video-play-btn { width:52px; height:52px; border-radius:50%; background:rgba(30,198,255,0.12); border:1.5px solid rgba(30,198,255,0.4); display:flex; align-items:center; justify-content:center; font-size:18px; position:relative; z-index:1; box-shadow:0 0 24px rgba(30,198,255,0.2); }
+    .video-ph-label { font-size:13px; color:var(--text-3); position:relative; z-index:1; }
+    .video-duration { font-size:11px; color:var(--accent); background:rgba(30,198,255,0.1); border:1px solid rgba(30,198,255,0.2); padding:3px 12px; border-radius:20px; font-family:'Rubik',sans-serif; font-weight:700; position:relative; z-index:1; }
+
+    /* ── Summary ── */
+    .summary-points { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+    .summary-point { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--glass); border:1px solid var(--border); border-radius:13px; }
+    .sp-icon { font-size:22px; flex-shrink:0; }
+    .sp-text { font-size:14px; color:var(--text-2); line-height:1.4; }
+    .sp-text strong { color:var(--text); font-family:'Rubik',sans-serif; }
+    .next-unit-card { background:linear-gradient(135deg,rgba(30,198,255,0.08),rgba(0,174,239,0.03)); border:1px solid rgba(30,198,255,0.2); border-radius:14px; padding:16px; text-align:center; }
+    .next-unit-label { font-size:11px; color:var(--text-3); margin-bottom:4px; }
+    .next-unit-name { font-family:'Rubik',sans-serif; font-weight:700; font-size:16px; color:var(--accent-hi); }
+
+    /* ── Icon images ── */
+    .city-ring img          { width:48px!important; height:48px!important; object-fit:contain; }
+    .analogy-emoji img      { width:28px!important; height:28px!important; object-fit:contain; display:block; margin:auto; }
+    .comp-item-icon img     { width:28px!important; height:28px!important; object-fit:contain; display:block; margin:auto; }
+    .proto-icon-big img     { width:40px!important; height:40px!important; object-fit:contain; }
+    .sp-icon img            { width:28px!important; height:28px!important; object-fit:contain; display:block; margin:auto; }
+    .pm-emoji img           { width:28px!important; height:28px!important; object-fit:contain; display:block; margin:auto; }
+    .usecase-chip img       { width:20px!important; height:20px!important; object-fit:contain; vertical-align:middle; }
+    .compare-table th img   { width:16px!important; height:16px!important; object-fit:contain; vertical-align:middle; }
+    .reveal-block-label img { width:20px!important; height:20px!important; object-fit:contain; vertical-align:middle; }
+    .reveal-answer-text img { width:16px!important; height:16px!important; object-fit:contain; vertical-align:middle; }
+    .eyebrow img            { width:18px!important; height:18px!important; object-fit:contain; vertical-align:middle; }
+    .mc-q img               { width:20px!important; height:20px!important; object-fit:contain; vertical-align:middle; }
+    .pro-card-title img, .con-card-title img { width:16px!important; height:16px!important; object-fit:contain; vertical-align:middle; }
+    .activity-tag img       { width:16px!important; height:16px!important; object-fit:contain; vertical-align:middle; }
+    .classify-scenario img  { width:18px!important; height:18px!important; object-fit:contain; vertical-align:middle; }
+
+    /* ── Navigation dots ── */
+    .dots { display:flex; justify-content:center; gap:5px; padding:8px 0 4px; }
+    .dot { width:5px; height:5px; border-radius:3px; background:rgba(30,198,255,0.12); transition:all 0.35s cubic-bezier(.4,0,.2,1); }
+    .dot.active { width:20px; background:linear-gradient(90deg,var(--accent-str),var(--accent-hi)); box-shadow:0 0 10px var(--glow); }
+
+    /* ── Nav buttons ── */
+    .nav { padding:6px 20px 20px; display:flex; gap:10px; justify-content:center; align-items:center; }
+    .btn { border:none; border-radius:14px; font-family:'Rubik',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:all 0.22s ease; }
+    .btn-primary { padding:13px 44px; background:linear-gradient(135deg,var(--accent),var(--accent-str)); color:#040E1C; border-radius:8px; box-shadow:0 4px 20px rgba(30,198,255,0.3); }
+    .btn-primary:hover { box-shadow:0 6px 32px rgba(30,198,255,0.55); transform:translateY(-1px); }
+    .btn-back { padding:13px 18px; background:rgba(30,198,255,0.06); color:var(--text-3); border:1px solid rgba(30,198,255,0.15); border-radius:8px; }
+    .btn-back:hover { color:var(--text-2); background:rgba(30,198,255,0.1); }
+
+    /* ══ NEW: Port-specific components ══ */
+
+    /* Socket visual */
+    .socket-visual { display:flex; align-items:center; justify-content:center; gap:0; margin:14px 0; direction:ltr; }
+    .sock-ip { background:rgba(30,198,255,0.08); border:1px solid rgba(30,198,255,0.25); border-radius:10px 0 0 10px; padding:10px 14px; font-family:'Rubik',sans-serif; font-weight:900; font-size:17px; color:var(--text-2); }
+    .sock-colon { font-family:'Rubik',sans-serif; font-weight:900; font-size:22px; color:var(--accent); background:rgba(30,198,255,0.05); border-top:1px solid rgba(30,198,255,0.25); border-bottom:1px solid rgba(30,198,255,0.25); padding:10px 4px; }
+    .sock-port { background:rgba(30,198,255,0.15); border:1px solid rgba(30,198,255,0.45); border-radius:0 10px 10px 0; padding:10px 14px; font-family:'Rubik',sans-serif; font-weight:900; font-size:17px; color:var(--accent); }
+    .socket-label { text-align:center; font-size:11px; color:var(--text-3); margin-bottom:12px; }
+    .socket-eq { font-size:12px; color:var(--text-3); margin:8px 0 4px; text-align:center; }
+
+    /* Protocol comparison (TCP / UDP) */
+    .proto-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .proto-icon-big { font-size:32px; }
+    .proto-tagline { font-size:13px; color:var(--text-3); margin-top:3px; }
+
+    /* Pro/Con two-column */
+    .pro-con-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .pro-card { background:rgba(0,220,120,0.06); border:1px solid rgba(0,220,120,0.2); border-radius:12px; padding:12px; font-size:13px; color:var(--text-2); line-height:1.9; }
+    .con-card { background:rgba(255,80,80,0.06); border:1px solid rgba(255,80,80,0.18); border-radius:12px; padding:12px; font-size:13px; color:var(--text-2); line-height:1.9; }
+    .pro-card-title, .con-card-title { font-family:'Rubik',sans-serif; font-weight:700; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; display:block; }
+    .pro-card-title { color:var(--green); }
+    .con-card-title { color:var(--red); }
+
+    /* Use-case chips */
+    .usecase-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+    .usecase-chip { background:var(--glass); border:1px solid var(--border); border-radius:20px; padding:6px 13px; font-size:13px; color:var(--text-2); display:flex; align-items:center; gap:5px; }
+
+    /* Comparison table */
+    .compare-wrap { background:var(--glass); border:1px solid var(--border); border-radius:13px; overflow:hidden; margin-bottom:12px; }
+    .compare-table { width:100%; border-collapse:collapse; }
+    .compare-table th { background:rgba(30,198,255,0.07); color:var(--accent); font-family:'Rubik',sans-serif; font-weight:700; font-size:12px; padding:9px 12px; text-align:center; border-bottom:1px solid var(--border); }
+    .compare-table th:first-child { text-align:right; }
+    .compare-table td { padding:9px 12px; font-size:13px; color:var(--text-2); text-align:center; border-bottom:1px solid var(--border); }
+    .compare-table tr:last-child td { border-bottom:none; }
+    .compare-table td:first-child { color:var(--text-3); text-align:right; }
+    .compare-table .ok  { color:var(--green); font-weight:700; }
+    .compare-table .bad { color:var(--red); }
+
+    /* Port match activity */
+    .port-match-list { display:flex; flex-direction:column; gap:10px; }
+    .port-match-item { background:var(--glass); border:1px solid var(--border); border-radius:13px; padding:12px 14px; }
+    .pm-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .pm-emoji { font-size:20px; }
+    .pm-service-name { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--text); flex:1; }
+    .pm-status { font-size:16px; width:20px; text-align:center; }
+    .pm-desc { font-size:12px; color:var(--text-3); margin-bottom:10px; }
+    .pm-chips { display:flex; gap:8px; }
+    .pm-chip { flex:1; padding:9px 6px; background:rgba(30,198,255,0.05); border:1px solid rgba(30,198,255,0.18); border-radius:9px; font-family:'Rubik',sans-serif; font-weight:900; font-size:15px; color:var(--text-3); cursor:pointer; transition:all 0.2s; text-align:center; }
+    .pm-chip:hover { background:rgba(30,198,255,0.12); color:var(--text); border-color:rgba(30,198,255,0.4); }
+    .pm-chip.correct { background:rgba(0,220,120,0.1); border-color:var(--green); color:var(--green); pointer-events:none; }
+    .pm-chip.wrong   { background:rgba(255,80,80,0.08); border-color:var(--red); color:var(--red); pointer-events:none; animation:shake 0.3s ease; }
+    .pm-chip.reveal  { border-color:var(--green); color:var(--green); pointer-events:none; }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-blob bg-blob-1"></div>
+<div class="bg-blob bg-blob-2"></div>
+
+<div class="app">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+
+  <div class="unit-header">
+    <span class="unit-badge"><span class="badge-dot"></span>יחידה 2 · סייבר</span>
+    <span class="screen-counter" id="screenCounter">1 / 10</span>
+  </div>
+
+  <div class="screens">
+
+    <!-- ① HOOK -->
+    <div class="screen active" id="screen-0">
+      <p class="eyebrow"><img src="../../../../assets/icons/unit-02/batch2/lightning-bolt.png" alt=""> Mission 02</p>
+      <h1 class="hook-title grad">Chrome, Spotify ו-WhatsApp פתוחים בו-זמנית — איך המחשב לא מתבלבל?</h1>
+
+      <div class="glass city-card gap">
+        <div class="city-ring"><img src="../../../../assets/icons/unit-02/port-door.png" alt="" style="width:40px;height:40px;object-fit:contain;"></div>
+        <div id="stat-hidden">
+          <div class="stat-question">?</div>
+          <p class="stat-hint">כמה חיבורים פעילים יש עכשיו במחשב שלך?</p>
+          <button class="reveal-btn" onclick="revealStat()">גלה את התשובה</button>
+        </div>
+        <div id="stat-visible" style="display:none">
+          <div class="city-stat" id="cityStat">0</div>
+          <div class="city-stat-label">חיבורים רשת פעילים בו-זמנית — Chrome, Spotify, WhatsApp, Windows Update...</div>
+        </div>
+      </div>
+
+      <div class="glass hook-body gap">
+        כל אחת מהאפליקציות "יושבת" מאחורי <strong>דלת מספרית</strong> משלה.<br>
+        ל-IP יש את כתובת הבית. <strong>הפורט הוא מספר הדלת</strong> — ומי נמצא מאחוריה.
+      </div>
+
+      <div class="reveal-block" id="hook-reveal" onclick="revealHook()">
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-02/batch2/house-analogy.png" alt=""> ראה את האנלוגיה המלאה</span>
+      </div>
+      <div class="reveal-answer" id="hook-answer" style="display:none">
+        <div class="reveal-answer-label">בית ודלתות</div>
+        <div class="reveal-answer-text">
+          נניח שיש <strong>בית ברחוב האינטרנט 15</strong> — זו כתובת ה-IP.<br><br>
+          בתוך הבית יש חדרים עם דלתות:<br>
+          <img src="../../../../assets/icons/unit-02/port-door.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> דלת <strong>443</strong> — Chrome (HTTPS)<br>
+          <img src="../../../../assets/icons/unit-02/port-door.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> דלת <strong>4070</strong> — Spotify<br>
+          <img src="../../../../assets/icons/unit-02/port-door.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"> דלת <strong>5222</strong> — WhatsApp<br><br>
+          כשמידע מגיע לבית — הפורט אומר <strong>לאיזה חדר לפנות</strong>.
+        </div>
+      </div>
+    </div>
+
+    <!-- ② וידאו -->
+    <div class="screen" id="screen-1">
+      <p class="eyebrow"><img src="../../../../assets/icons/unit-02/batch2/video-camera.png" alt=""> סרטון מבוא</p>
+      <h2 class="grad section-title">לפני שמתחילים</h2>
+
+      <div class="video-ph gap">
+        <div class="scan-line"></div>
+        <div class="video-play-btn">▶</div>
+        <div class="video-ph-label">סרטון HeyGen — יחידה 2</div>
+        <div class="video-duration">~3 דקות</div>
+      </div>
+
+      <div class="concept-pill">
+        הסרטון יכסה: מהו פורט, ההבדל בין TCP ל-UDP, וכיצד שירותים מתקשרים ברשת.
+      </div>
+    </div>
+
+    <!-- ③ יעדים -->
+    <div class="screen" id="screen-2">
+      <p class="eyebrow">מה נגלה היום</p>
+      <h2 class="grad section-title">בסוף היחידה תדע:</h2>
+      <div class="obj-list">
+        <div class="obj-item">
+          <div class="obj-num">1</div>
+          <div class="obj-text">להסביר מהו פורט ולמה הוא חיוני לתקשורת ברשת</div>
+        </div>
+        <div class="obj-item">
+          <div class="obj-num">2</div>
+          <div class="obj-text">לזהות פורטים נפוצים — HTTP, HTTPS, SSH, FTP, DNS</div>
+        </div>
+        <div class="obj-item">
+          <div class="obj-num">3</div>
+          <div class="obj-text">להבחין בין TCP ל-UDP ולדעת מתי כל אחד מתאים</div>
+        </div>
+        <div class="obj-item">
+          <div class="obj-num">4</div>
+          <div class="obj-text">להבין מהו Socket (IP + פורט) ולקרוא את פקודת netstat</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ מהו פורט? -->
+    <div class="screen" id="screen-3">
+      <p class="eyebrow">חלק 1</p>
+      <h2 class="grad section-title">מהו פורט?</h2>
+
+      <div class="concept-pill gap">
+        <strong>פורט</strong> = מספר שמזהה אפליקציה ספציפית במכשיר. טווח: <strong>0 – 65,535</strong>
+        <span class="pp-toggle" data-label="למה 65,535?" onclick="toggleDetail('port-range',this)">▾ למה 65,535?</span>
+        <div class="pp-detail" id="port-range" style="display:none">
+          פורט הוא מספר של 16 סיביות (bit) — כלומר 2¹⁶ = 65,536 אפשרויות (0 עד 65,535). כל מספר יכול לשמש לשירות אחר. בפועל, רוב השירותים הנפוצים מרוכזים ב-0 עד 1023.
+        </div>
+      </div>
+
+      <div class="analogy-card glass gap">
+        <div class="analogy-label">אנלוגיה — בניין דירות</div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/building-ip.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+          <span class="analogy-source">כתובת הבניין</span>
+          <span class="analogy-eq">=</span>
+          <span class="analogy-target">כתובת IP</span>
+        </div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/port-door.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+          <span class="analogy-source">מספר הדירה</span>
+          <span class="analogy-eq">=</span>
+          <span class="analogy-target">פורט</span>
+        </div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/tcp-package.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+          <span class="analogy-source">חבילה לדייר ספציפי</span>
+          <span class="analogy-eq">=</span>
+          <span class="analogy-target">מידע לאפליקציה</span>
+        </div>
+      </div>
+
+      <div class="section-divider">פורטים מוכרים</div>
+      <p style="font-size:12px;color:var(--text-3);text-align:center;margin-bottom:8px;">לחצו לפרטים</p>
+
+      <div class="comp-list gap">
+        <div class="comp-item" onclick="toggleCompItem('pi-http',this)">
+          <div class="comp-item-header">
+            <div class="comp-item-left">
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-02/http-globe.png" alt="" style="width:22px;height:22px;object-fit:contain;"></span>
+              <div><span class="comp-chip-name">HTTP</span><span class="comp-chip-en">פורט 80</span></div>
+            </div>
+            <span class="comp-item-arrow">▾</span>
+          </div>
+          <div class="comp-item-detail" id="pi-http" style="display:none">
+            <strong>HyperText Transfer Protocol</strong> — גלישה לאתרים. לא מוצפן — כל הנתונים נשלחים "גלויים". כיום מרבית האתרים עוברים ל-HTTPS.
+          </div>
+        </div>
+        <div class="comp-item" onclick="toggleCompItem('pi-https',this)">
+          <div class="comp-item-header">
+            <div class="comp-item-left">
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-02/https-lock.png" alt="" style="width:22px;height:22px;object-fit:contain;"></span>
+              <div><span class="comp-chip-name">HTTPS</span><span class="comp-chip-en">פורט 443</span></div>
+            </div>
+            <span class="comp-item-arrow">▾</span>
+          </div>
+          <div class="comp-item-detail" id="pi-https" style="display:none">
+            <strong>HTTP Secure</strong> — גלישה מוצפנת. כשרואים 🔒 בדפדפן, השרת שומע על פורט 443. <strong>Instagram, Facebook, TikTok</strong> — הכל על 443.
+          </div>
+        </div>
+        <div class="comp-item" onclick="toggleCompItem('pi-ftp',this)">
+          <div class="comp-item-header">
+            <div class="comp-item-left">
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-02/ftp-folder.png" alt="" style="width:22px;height:22px;object-fit:contain;"></span>
+              <div><span class="comp-chip-name">FTP</span><span class="comp-chip-en">פורט 21</span></div>
+            </div>
+            <span class="comp-item-arrow">▾</span>
+          </div>
+          <div class="comp-item-detail" id="pi-ftp" style="display:none">
+            <strong>File Transfer Protocol</strong> — העלאת קבצים רבים לשרת. ישן ולא מוצפן. SFTP (דרך SSH) הוא הגרסה המאובטחת המודרנית.
+          </div>
+        </div>
+        <div class="comp-item" onclick="toggleCompItem('pi-ssh',this)">
+          <div class="comp-item-header">
+            <div class="comp-item-left">
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-02/ssh-terminal.png" alt="" style="width:22px;height:22px;object-fit:contain;"></span>
+              <div><span class="comp-chip-name">SSH</span><span class="comp-chip-en">פורט 22</span></div>
+            </div>
+            <span class="comp-item-arrow">▾</span>
+          </div>
+          <div class="comp-item-detail" id="pi-ssh" style="display:none">
+            <strong>Secure Shell</strong> — חיבור מרחוק מאובטח לשרת עם שם משתמש וסיסמה. מנהלי מערכת משתמשים בו יומיום. פורט 22 הוא יעד נפוץ לניסיונות פריצה.
+          </div>
+        </div>
+        <div class="comp-item" onclick="toggleCompItem('pi-dns',this)">
+          <div class="comp-item-header">
+            <div class="comp-item-left">
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-02/dns-book.png" alt="" style="width:22px;height:22px;object-fit:contain;"></span>
+              <div><span class="comp-chip-name">DNS</span><span class="comp-chip-en">פורט 53</span></div>
+            </div>
+            <span class="comp-item-arrow">▾</span>
+          </div>
+          <div class="comp-item-detail" id="pi-dns" style="display:none">
+            <strong>Domain Name System</strong> — "ספר הטלפונים" של האינטרנט. מתרגם <strong>www.instagram.com</strong> לכתובת IP. בלעדיו, היינו צריכים לזכור מספרים במקום שמות.
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider">בדוק את עצמך</div>
+      <div class="mc-block" id="mc-3">
+        <div class="mc-q"><img src="../../../../assets/icons/unit-02/batch2/question-mark.png" alt=""> Instagram ו-TikTok עובדים על איזה פורט?</div>
+        <div class="mc-options">
+          <div class="mc-opt" onclick="answerMC(this,'mc-3',false,1)">פורט 80 — HTTP</div>
+          <div class="mc-opt" onclick="answerMC(this,'mc-3',true,1)">פורט 443 — HTTPS 🔒</div>
+          <div class="mc-opt" onclick="answerMC(this,'mc-3',false,1)">פורט 22 — SSH</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ TCP -->
+    <div class="screen" id="screen-4">
+      <p class="eyebrow">חלק 2</p>
+      <h2 class="grad section-title">TCP — תקשורת אמינה</h2>
+
+      <div class="proto-header">
+        <span class="proto-icon-big"><img src="../../../../assets/icons/unit-02/tcp-package.png" alt="" style="width:32px;height:32px;object-fit:contain;"></span>
+        <div>
+          <div style="font-family:'Rubik',sans-serif;font-weight:700;font-size:16px;color:var(--text)">Transmission Control Protocol</div>
+          <div class="proto-tagline">שולח ומוודא שהכל הגיע — כמו משלוח עם אישור מסירה</div>
+        </div>
+      </div>
+
+      <div class="analogy-card glass gap">
+        <div class="analogy-label">דימוי — שליח עם אישור מסירה</div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/batch2/arrow-send.png" alt=""></span>
+          <span class="analogy-source">לקוח שולח בקשה</span>
+          <span class="analogy-eq">→</span>
+          <span class="analogy-target">"אפשר להתחבר?"</span>
+        </div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/batch2/arrow-receive.png" alt=""></span>
+          <span class="analogy-source">שרת עונה</span>
+          <span class="analogy-eq">→</span>
+          <span class="analogy-target">"כן, מחובר!"</span>
+        </div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/batch2/arrows-exchange.png" alt=""></span>
+          <span class="analogy-source">העברת נתונים</span>
+          <span class="analogy-eq">→</span>
+          <span class="analogy-target">עם אישור לכל חבילה</span>
+        </div>
+        <div class="analogy-row">
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-02/batch2/retry-arrow.png" alt=""></span>
+          <span class="analogy-source">אם נאבד</span>
+          <span class="analogy-eq">→</span>
+          <span class="analogy-target">שולחים שוב אוטומטית</span>
+        </div>
+      </div>
+
+      <div class="pro-con-row gap">
+        <div class="pro-card">
+          <span class="pro-card-title"><img src="../../../../assets/icons/unit-02/batch2/check-pro.png" alt=""> יתרונות</span>
+          אמין<br>
+          מסודר<br>
+          בודק שגיאות
+        </div>
+        <div class="con-card">
+          <span class="con-card-title"><img src="../../../../assets/icons/unit-02/batch2/x-con.png" alt=""> חסרונות</span>
+          איטי יותר<br>
+          דורש תקשורת נוספת
+        </div>
+      </div>
+
+      <div class="section-divider">מתאים ל</div>
+      <div class="usecase-row gap">
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/http-globe.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> גלישה לאתרים</div>
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/email.png" alt=""> אימייל</div>
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/arrow-receive.png" alt=""> הורדות</div>
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/bank.png" alt=""> בנקאות</div>
+      </div>
+
+      <div class="reveal-block" id="tcp-reveal" onclick="revealTCP()">
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-02/batch2/handshake.png" alt=""> TCP Handshake — איך מתחברים?</span>
+      </div>
+      <div class="reveal-answer" id="tcp-answer" style="display:none">
+        <div class="reveal-answer-label">לחיצת יד — TCP 3-Way Handshake</div>
+        <div class="reveal-answer-text">
+          לפני כל שיחת TCP יש "לחיצת יד" בת 3 שלבים:<br><br>
+          <img src="../../../../assets/icons/unit-02/batch2/step-1.png" alt=""> <strong>SYN</strong> — לקוח: "רוצה להתחבר?"<br>
+          <img src="../../../../assets/icons/unit-02/batch2/step-2.png" alt=""> <strong>SYN-ACK</strong> — שרת: "בסדר, נתחבר!"<br>
+          <img src="../../../../assets/icons/unit-02/batch2/step-3.png" alt=""> <strong>ACK</strong> — לקוח: "מתחיל לשלוח."<br><br>
+          רק אחרי שלושת השלבים מתחילה העברת הנתונים האמיתית.
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑥ UDP + השוואה -->
+    <div class="screen" id="screen-5">
+      <p class="eyebrow">חלק 3</p>
+      <h2 class="grad section-title">UDP — תקשורת מהירה</h2>
+
+      <div class="proto-header">
+        <span class="proto-icon-big"><img src="../../../../assets/icons/unit-02/udp-broadcast.png" alt="" style="width:32px;height:32px;object-fit:contain;"></span>
+        <div>
+          <div style="font-family:'Rubik',sans-serif;font-weight:700;font-size:16px;color:var(--text)">User Datagram Protocol</div>
+          <div class="proto-tagline">שולח מהר — בלי לבדוק אם הגיע</div>
+        </div>
+      </div>
+
+      <div class="concept-pill gap">
+        UDP דומה <strong>לצעוק "מסירה!"</strong> במגרש כדורגל — לא בודקים אם כולם שמעו. מה שחשוב זה <strong>מהירות</strong>, לא שלמות.
+      </div>
+
+      <div class="pro-con-row gap">
+        <div class="pro-card">
+          <span class="pro-card-title"><img src="../../../../assets/icons/unit-02/batch2/check-pro.png" alt=""> יתרונות</span>
+          מהיר מאוד<br>
+          קליל<br>
+          פחות עומס
+        </div>
+        <div class="con-card">
+          <span class="con-card-title"><img src="../../../../assets/icons/unit-02/batch2/x-con.png" alt=""> חסרונות</span>
+          מידע עלול ללכת לאיבוד<br>
+          אין בדיקת סדר
+        </div>
+      </div>
+
+      <div class="section-divider">מתאים ל</div>
+      <div class="usecase-row gap">
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt=""> משחקי רשת</div>
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/video-call.png" alt=""> Zoom</div>
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/music-note.png" alt=""> Spotify</div>
+        <div class="usecase-chip"><img src="../../../../assets/icons/unit-02/batch2/satellite-dish.png" alt=""> Direct TV</div>
+      </div>
+
+      <div class="section-divider">TCP vs UDP — השוואה</div>
+
+      <div class="compare-wrap gap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>תכונה</th>
+              <th>TCP <img src="../../../../assets/icons/unit-02/tcp-package.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></th>
+              <th>UDP <img src="../../../../assets/icons/unit-02/udp-broadcast.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>אמינות</td>
+              <td class="ok">גבוהה</td>
+              <td class="bad">נמוכה</td>
+            </tr>
+            <tr>
+              <td>מהירות</td>
+              <td class="bad">איטי יותר</td>
+              <td class="ok">מהיר</td>
+            </tr>
+            <tr>
+              <td>בדיקת קבלה</td>
+              <td class="ok">כן ✓</td>
+              <td class="bad">לא ✗</td>
+            </tr>
+            <tr>
+              <td>מתאים ל</td>
+              <td>אתרים · קבצים</td>
+              <td>משחקים · שיחות</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ⑦ פעילות — TCP או UDP? -->
+    <div class="screen" id="screen-6">
+      <div class="activity-banner">
+        <div class="activity-tag"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt=""> פעילות — סיווג</div>
+        <div class="activity-instruction">TCP או UDP? בחרו את הפרוטוקול המתאים לכל שימוש</div>
+      </div>
+
+      <div class="classify-list" id="classifyTU">
+        <div class="classify-row" id="ctu-0">
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-02/batch2/arrow-receive.png" alt=""> הורדת משחק מ-Steam</div>
+          <div class="classify-btns">
+            <button class="cls-btn" onclick="classifyTU(0,'TCP',true)">TCP</button>
+            <button class="cls-btn" onclick="classifyTU(0,'UDP',false)">UDP</button>
+          </div>
+        </div>
+        <div class="classify-row" id="ctu-1">
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt=""> Fortnite — תנועת שחקנים בזמן אמת</div>
+          <div class="classify-btns">
+            <button class="cls-btn" onclick="classifyTU(1,'TCP',false)">TCP</button>
+            <button class="cls-btn" onclick="classifyTU(1,'UDP',true)">UDP</button>
+          </div>
+        </div>
+        <div class="classify-row" id="ctu-2">
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-02/batch2/video-call.png" alt=""> שיחת Zoom</div>
+          <div class="classify-btns">
+            <button class="cls-btn" onclick="classifyTU(2,'TCP',false)">TCP</button>
+            <button class="cls-btn" onclick="classifyTU(2,'UDP',true)">UDP</button>
+          </div>
+        </div>
+        <div class="classify-row" id="ctu-3">
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-02/batch2/bank.png" alt=""> העברת כסף בבנק אונליין</div>
+          <div class="classify-btns">
+            <button class="cls-btn" onclick="classifyTU(3,'TCP',true)">TCP</button>
+            <button class="cls-btn" onclick="classifyTU(3,'UDP',false)">UDP</button>
+          </div>
+        </div>
+      </div>
+      <div id="ctu-success" class="check-success" style="display:none;margin-top:10px">✓ סיווגת נכון — אתה מבין TCP ו-UDP!</div>
+    </div>
+
+    <!-- ⑧ Socket -->
+    <div class="screen" id="screen-7">
+      <p class="eyebrow">חלק 4</p>
+      <h2 class="grad section-title">Socket — IP + פורט</h2>
+
+      <div class="concept-pill gap">
+        <strong>Socket</strong> = שילוב של IP + פורט שמזהה חיבור ספציפי ברשת באופן ייחודי.
+      </div>
+
+      <div class="glass gap" style="padding:14px 16px;">
+        <div class="analogy-label">כך נראה Socket</div>
+        <div class="socket-visual">
+          <div class="sock-ip">192.168.1.15</div>
+          <div class="sock-colon">:</div>
+          <div class="sock-port">443</div>
+        </div>
+        <div class="socket-label">כתובת IP &nbsp;·&nbsp; פורט</div>
+        <div class="socket-eq">= Chrome על המחשב שלי, מחובר לשרת דרך HTTPS</div>
+      </div>
+
+      <div class="section-divider">כיצד זה עובד?</div>
+
+      <div class="glass gap">
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-num">1</div>
+            <div class="flow-text">הדפדפן בוחר פורט זמני (למשל 54321) ושולח בקשה ל-<strong>google.com:443</strong></div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">2</div>
+            <div class="flow-text">שרת Google שומע על פורט 443 ורואה: IP שלך + פורט זמני</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">3</div>
+            <div class="flow-text">השרת שולח תגובה ל-IP שלך על פורט 54321</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-num">4</div>
+            <div class="flow-text">המחשב שלך מפנה את המידע ל-Chrome לפי פורט 54321</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal-block" id="netstat-reveal" onclick="revealNetstat()">
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-02/ssh-terminal.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;"> ראה את החיבורים שלך — פקודת netstat</span>
+      </div>
+      <div class="reveal-answer" id="netstat-answer" style="display:none">
+        <div class="reveal-answer-label">נסה בעצמך</div>
+        <div class="reveal-answer-text">
+          <strong>Windows + R</strong> → כתוב <strong>cmd</strong> → Enter<br>
+          הקלד: <strong>netstat -n</strong> → Enter<br><br>
+          <strong>פלט לדוגמה:</strong>
+          <code style="font-family:monospace;font-size:11px;color:var(--accent-hi);background:rgba(0,0,0,0.35);display:block;padding:10px 12px;border-radius:8px;margin:10px 0;direction:ltr;text-align:left;line-height:1.9">TCP  192.168.1.15:52341  216.58.212.142:443  ESTABLISHED
+TCP  192.168.1.15:52342  157.240.19.35:443   ESTABLISHED
+TCP  192.168.1.15:52343  104.16.233.48:443   ESTABLISHED</code>
+          כל שורה = socket אחד (חיבור פעיל).<br>
+          <img src="../../../../assets/icons/unit-02/batch2/dot-blue.png" alt=""> IP שלך + פורט זמני ↔ IP שרת + פורט שירות<br>
+          <img src="../../../../assets/icons/unit-02/batch2/dot-green.png" alt=""> <strong>ESTABLISHED</strong> = חיבור פעיל כרגע
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑨ פעילות — match protocol to port -->
+    <div class="screen" id="screen-8">
+      <div class="activity-banner">
+        <div class="activity-tag"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt=""> פעילות — התאמה</div>
+        <div class="activity-instruction">לאיזה פורט שייך כל פרוטוקול? לחצו על הפורט הנכון</div>
+      </div>
+
+      <div class="port-match-list">
+
+        <div class="port-match-item" id="pm-0">
+          <div class="pm-header">
+            <span class="pm-emoji"><img src="../../../../assets/icons/unit-02/http-globe.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+            <span class="pm-service-name">HTTP</span>
+            <span class="pm-status" id="pms-0"></span>
+          </div>
+          <div class="pm-desc">גלישה לאתרים — לא מוצפן</div>
+          <div class="pm-chips">
+            <button class="pm-chip" onclick="matchPort(0,true,this,0)">80</button>
+            <button class="pm-chip" onclick="matchPort(0,false,this,0)">443</button>
+            <button class="pm-chip" onclick="matchPort(0,false,this,0)">22</button>
+          </div>
+        </div>
+
+        <div class="port-match-item" id="pm-1">
+          <div class="pm-header">
+            <span class="pm-emoji"><img src="../../../../assets/icons/unit-02/https-lock.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+            <span class="pm-service-name">HTTPS</span>
+            <span class="pm-status" id="pms-1"></span>
+          </div>
+          <div class="pm-desc">גלישה מוצפנת — Instagram, YouTube, כולם</div>
+          <div class="pm-chips">
+            <button class="pm-chip" onclick="matchPort(1,false,this,1)">80</button>
+            <button class="pm-chip" onclick="matchPort(1,true,this,1)">443</button>
+            <button class="pm-chip" onclick="matchPort(1,false,this,1)">22</button>
+          </div>
+        </div>
+
+        <div class="port-match-item" id="pm-2">
+          <div class="pm-header">
+            <span class="pm-emoji"><img src="../../../../assets/icons/unit-02/ssh-terminal.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+            <span class="pm-service-name">SSH</span>
+            <span class="pm-status" id="pms-2"></span>
+          </div>
+          <div class="pm-desc">חיבור מרחוק מאובטח לשרת</div>
+          <div class="pm-chips">
+            <button class="pm-chip" onclick="matchPort(2,false,this,1)">21</button>
+            <button class="pm-chip" onclick="matchPort(2,true,this,1)">22</button>
+            <button class="pm-chip" onclick="matchPort(2,false,this,1)">53</button>
+          </div>
+        </div>
+
+        <div class="port-match-item" id="pm-3">
+          <div class="pm-header">
+            <span class="pm-emoji"><img src="../../../../assets/icons/unit-02/dns-book.png" alt="" style="width:20px;height:20px;object-fit:contain;"></span>
+            <span class="pm-service-name">DNS</span>
+            <span class="pm-status" id="pms-3"></span>
+          </div>
+          <div class="pm-desc">תרגום שם דומיין לכתובת IP</div>
+          <div class="pm-chips">
+            <button class="pm-chip" onclick="matchPort(3,false,this,2)">21</button>
+            <button class="pm-chip" onclick="matchPort(3,false,this,2)">443</button>
+            <button class="pm-chip" onclick="matchPort(3,true,this,2)">53</button>
+          </div>
+        </div>
+
+      </div>
+      <div id="pm-success" class="check-success" style="display:none;margin-top:10px">✓ התאמה מושלמת — זכרת את כל הפורטים!</div>
+    </div>
+
+    <!-- ⑩ סיכום -->
+    <div class="screen" id="screen-9">
+      <p class="eyebrow">סיכום</p>
+      <h2 class="grad section-title">מה למדנו?</h2>
+
+      <div class="summary-points gap">
+        <div class="summary-point">
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-02/port-door.png" alt="" style="width:22px;height:22px;object-fit:contain;"></div>
+          <div class="sp-text"><strong>פורט</strong> — מספר (0–65535) שמזהה אפליקציה ספציפית. IP = בניין, פורט = דלת לחדר.</div>
+        </div>
+        <div class="summary-point">
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-02/batch2/port-numbers.png" alt="" style="width:28px;height:28px;object-fit:contain;"></div>
+          <div class="sp-text"><strong>פורטים מוכרים</strong> — HTTP:80 · HTTPS:443 · SSH:22 · FTP:21 · DNS:53</div>
+        </div>
+        <div class="summary-point">
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-02/tcp-package.png" alt="" style="width:22px;height:22px;object-fit:contain;"></div>
+          <div class="sp-text"><strong>TCP</strong> — אמין, מסודר, בודק הגעה. מתאים לאתרים, הורדות, בנקאות.</div>
+        </div>
+        <div class="summary-point">
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-02/udp-broadcast.png" alt="" style="width:22px;height:22px;object-fit:contain;"></div>
+          <div class="sp-text"><strong>UDP</strong> — מהיר, לא בודק. מתאים למשחקים, Zoom, Spotify.</div>
+        </div>
+        <div class="summary-point">
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-02/socket-plug.png" alt="" style="width:22px;height:22px;object-fit:contain;"></div>
+          <div class="sp-text"><strong>Socket</strong> = IP + פורט. מזהה חיבור ספציפי באופן ייחודי — גלוי ב-netstat.</div>
+        </div>
+      </div>
+
+      <div class="next-unit-card">
+        <div class="next-unit-label">יחידה 3 — מה הבא?</div>
+        <div class="next-unit-name">HTTP ו-HTTPS — איך דפדפן מדבר עם שרת 🔐</div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <div class="dots">
+    <div class="dot active" id="dot-0"></div>
+    <div class="dot" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+    <div class="dot" id="dot-3"></div>
+    <div class="dot" id="dot-4"></div>
+    <div class="dot" id="dot-5"></div>
+    <div class="dot" id="dot-6"></div>
+    <div class="dot" id="dot-7"></div>
+    <div class="dot" id="dot-8"></div>
+    <div class="dot" id="dot-9"></div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-back" id="btnBack" onclick="navigate(-1)" style="display:none">→</button>
+    <button class="btn btn-primary" id="btnNext" onclick="navigate(1)">מה זה פורט? בואו נגלה ⚡</button>
+  </div>
+</div>
+
+<script>
+  const TOTAL = 10;
+  let current = 0;
+  let animating = false;
+
+  const labels = [
+    'מה זה פורט? בואו נגלה ⚡',
+    'מה תדעו בסוף היחידה ←',
+    'מהו פורט? ←',
+    'TCP — תקשורת אמינה ←',
+    'UDP — תקשורת מהירה ←',
+    'לפעילות — TCP או UDP? ←',
+    'Socket — IP + פורט ←',
+    'לפעילות — התאמת פורטים ←',
+    'לסיכום ←',
+    '✓ סיום'
+  ];
+
+  function goToScreen(n) {
+    if (animating || n === current) return;
+    animating = true;
+    const prev = document.getElementById('screen-' + current);
+    const next = document.getElementById('screen-' + n);
+    prev.classList.add('exit');
+    prev.classList.remove('active');
+    document.getElementById('dot-' + current).classList.remove('active');
+    setTimeout(() => {
+      prev.classList.remove('exit');
+      next.classList.add('active');
+      document.getElementById('dot-' + n).classList.add('active');
+      current = n;
+      document.getElementById('progressFill').style.width = ((current + 1) / TOTAL * 100) + '%';
+      document.getElementById('screenCounter').textContent = (current + 1) + ' / ' + TOTAL;
+      document.getElementById('btnNext').textContent = labels[current];
+      document.getElementById('btnBack').style.display = current > 0 ? 'block' : 'none';
+      if (current === 0) resetStat();
+      animating = false;
+    }, 220);
+  }
+
+  function navigate(dir) {
+    const n = current + dir;
+    if (n >= 0 && n < TOTAL) goToScreen(n);
+  }
+
+  /* ── Stat reveal ── */
+  function resetStat() {
+    document.getElementById('stat-hidden').style.display = 'block';
+    document.getElementById('stat-visible').style.display = 'none';
+    document.getElementById('cityStat').textContent = '0';
+    document.getElementById('hook-reveal').style.display = 'block';
+    document.getElementById('hook-answer').style.display = 'none';
+  }
+  function revealStat() {
+    document.getElementById('stat-hidden').style.display = 'none';
+    document.getElementById('stat-visible').style.display = 'block';
+    runCounter();
+  }
+  function runCounter() {
+    const el = document.getElementById('cityStat');
+    const target = 200;
+    const start = performance.now();
+    (function tick(now) {
+      const p = Math.min((now - start) / 1200, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target) + '+';
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = '200+';
+    })(performance.now());
+  }
+
+  /* ── Multiple choice ── */
+  function answerMC(el, blockId, correct, correctIdx) {
+    const block = document.getElementById(blockId);
+    if (block.dataset.answered) return;
+    block.dataset.answered = '1';
+    el.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) block.querySelectorAll('.mc-opt')[correctIdx].classList.add('reveal');
+    block.querySelectorAll('.mc-opt').forEach(o => {
+      if (o !== el && !o.classList.contains('reveal')) o.style.opacity = '0.4';
+      o.style.pointerEvents = 'none';
+    });
+  }
+
+  /* ── TCP/UDP classify ── */
+  const ctuDone = [false, false, false, false];
+  function classifyTU(idx, label, correct) {
+    const row = document.getElementById('ctu-' + idx);
+    if (row.dataset.answered) return;
+    row.dataset.answered = '1';
+    ctuDone[idx] = true;
+    const btn = [...row.querySelectorAll('.cls-btn')].find(b => b.textContent === label);
+    btn.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      const correctLabels = ['TCP','UDP','UDP','TCP'];
+      const correctBtn = [...row.querySelectorAll('.cls-btn')].find(b => b.textContent === correctLabels[idx]);
+      if (correctBtn) correctBtn.classList.add('reveal');
+    }
+    row.querySelectorAll('.cls-btn').forEach(b => b.style.pointerEvents = 'none');
+    if (ctuDone.every(Boolean)) document.getElementById('ctu-success').style.display = 'block';
+  }
+
+  /* ── Port match ── */
+  const pmDone = [false, false, false, false];
+  function matchPort(idx, correct, btn, correctChipIdx) {
+    const item = document.getElementById('pm-' + idx);
+    if (item.dataset.answered) return;
+    item.dataset.answered = '1';
+    pmDone[idx] = true;
+    btn.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) item.querySelectorAll('.pm-chip')[correctChipIdx].classList.add('reveal');
+    item.querySelectorAll('.pm-chip').forEach(c => {
+      if (c !== btn && !c.classList.contains('reveal') && !c.classList.contains('correct')) c.style.opacity = '0.35';
+      c.style.pointerEvents = 'none';
+    });
+    document.getElementById('pms-' + idx).textContent = correct ? '✓' : '✗';
+    if (pmDone.every(Boolean)) setTimeout(() => { document.getElementById('pm-success').style.display = 'block'; }, 400);
+  }
+
+  /* ── Reveal blocks ── */
+  function revealHook() {
+    document.getElementById('hook-reveal').style.display = 'none';
+    document.getElementById('hook-answer').style.display = 'block';
+  }
+  function revealTCP() {
+    document.getElementById('tcp-reveal').style.display = 'none';
+    document.getElementById('tcp-answer').style.display = 'block';
+  }
+  function revealNetstat() {
+    document.getElementById('netstat-reveal').style.display = 'none';
+    document.getElementById('netstat-answer').style.display = 'block';
+  }
+
+  /* ── Expandable items ── */
+  function toggleDetail(id, btn) {
+    const el = document.getElementById(id);
+    const open = el.style.display !== 'none';
+    el.style.display = open ? 'none' : 'block';
+    const label = btn.dataset.label || 'פרטים';
+    btn.textContent = open ? '▾ ' + label : '▴ סגור';
+  }
+  function toggleCompItem(id, container) {
+    const el = document.getElementById(id);
+    const arrow = container.querySelector('.comp-item-arrow');
+    const open = el.style.display !== 'none';
+    el.style.display = open ? 'none' : 'block';
+    if (arrow) arrow.textContent = open ? '▾' : '▴';
+  }
+</script>
+</body>
+</html>

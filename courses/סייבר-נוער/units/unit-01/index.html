@@ -83,7 +83,7 @@
     .hook-sub { font-size:15px; color:var(--text-3); margin-bottom:18px; }
     .city-card { padding:22px 20px; text-align:center; margin-bottom:16px; position:relative; overflow:hidden; }
     .city-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%,rgba(30,198,255,0.08),transparent 65%); pointer-events:none; }
-    .city-ring { width:88px; height:88px; border-radius:50%; background:rgba(30,198,255,0.06); border:1px solid rgba(30,198,255,0.2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-size:40px; animation:pulse-ring 3s ease-in-out infinite; position:relative; z-index:1; }
+    .city-ring { width:88px; height:88px; border-radius:50%; background:rgba(30,198,255,0.06); border:1px solid rgba(30,198,255,0.2); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; animation:pulse-ring 3s ease-in-out infinite; position:relative; z-index:1; }
     @keyframes pulse-ring { 0%,100%{box-shadow:0 0 0 0 rgba(30,198,255,0.25),0 0 20px rgba(30,198,255,0.1)} 50%{box-shadow:0 0 0 14px rgba(30,198,255,0),0 0 30px rgba(30,198,255,0.2)} }
     .city-stat { font-family:'Rubik',sans-serif; font-weight:900; font-size:40px; line-height:1; background:linear-gradient(135deg,var(--accent),var(--accent-hi)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 16px rgba(30,198,255,0.5)); position:relative; z-index:1; }
     .city-stat-label { font-size:12px; color:var(--text-3); margin-top:6px; position:relative; z-index:1; }
@@ -112,7 +112,7 @@
     .analogy-label { font-size:10px; color:var(--text-3); font-family:'Rubik',sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
     .analogy-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid rgba(30,198,255,0.07); }
     .analogy-row:last-child { border-bottom:none; }
-    .analogy-emoji { font-size:20px; width:28px; text-align:center; flex-shrink:0; }
+    .analogy-emoji { width:28px; text-align:center; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
     .analogy-source { font-size:13px; color:var(--text-3); flex:1; }
     .analogy-eq { font-size:12px; color:var(--accent); font-family:'Rubik',sans-serif; font-weight:700; }
     .analogy-target { font-size:13px; color:var(--text); font-family:'Rubik',sans-serif; font-weight:700; }
@@ -127,7 +127,7 @@
     /* ── Client/Server ── */
     .cs-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
     .cs-card { background:var(--glass); border:1px solid var(--border); border-radius:12px; padding:12px 10px; text-align:center; }
-    .cs-icon { font-size:24px; margin-bottom:6px; }
+    .cs-icon { margin-bottom:6px; display:flex; align-items:center; justify-content:center; }
     .cs-name { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--accent); margin-bottom:4px; }
     .cs-desc { font-size:12px; color:var(--text-3); line-height:1.4; }
 
@@ -153,7 +153,7 @@
     /* ── Classify activity ── */
     .classify-list { display:flex; flex-direction:column; gap:10px; }
     .classify-row { background:var(--glass); border:1px solid var(--border); border-radius:13px; padding:12px 14px; }
-    .classify-scenario { font-size:14px; color:var(--text-2); margin-bottom:10px; }
+    .classify-scenario { font-size:14px; color:var(--text-2); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
     .classify-btns { display:flex; gap:7px; }
     .cls-btn { flex:1; padding:7px 4px; background:rgba(30,198,255,0.05); border:1px solid rgba(30,198,255,0.18); border-radius:8px; font-family:'Rubik',sans-serif; font-weight:700; font-size:12px; color:var(--text-3); cursor:pointer; transition:all 0.2s; }
     .cls-btn:hover { background:rgba(30,198,255,0.12); color:var(--text); }
@@ -203,7 +203,7 @@
     /* ── Example cards ── */
     .example-cards { display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
     .example-card { display:flex; align-items:flex-start; gap:12px; padding:13px 14px; background:var(--glass); border:1px solid var(--border); border-radius:13px; }
-    .ex-icon { font-size:28px; flex-shrink:0; }
+    .ex-icon { flex-shrink:0; display:flex; align-items:center; justify-content:center; }
     .ex-body {}
     .ex-title { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--text); margin-bottom:4px; }
     .ex-desc { font-size:12px; color:var(--text-3); line-height:1.5; }
@@ -220,7 +220,7 @@
     /* ── Summary (screen 7) ── */
     .summary-points { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
     .summary-point { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--glass); border:1px solid var(--border); border-radius:13px; }
-    .sp-icon { font-size:22px; flex-shrink:0; }
+    .sp-icon { flex-shrink:0; display:flex; align-items:center; justify-content:center; }
     .sp-text { font-size:14px; color:var(--text-2); line-height:1.4; }
     .sp-text strong { color:var(--text); font-family:'Rubik',sans-serif; }
     .next-unit-card { background:linear-gradient(135deg,rgba(30,198,255,0.08),rgba(0,174,239,0.03)); border:1px solid rgba(30,198,255,0.2); border-radius:14px; padding:16px; text-align:center; }
@@ -242,7 +242,7 @@
 
     /* ── Activity banner ── */
     .activity-banner { background:linear-gradient(135deg,rgba(30,198,255,0.1),rgba(0,174,239,0.04)); border:1px solid rgba(30,198,255,0.22); border-radius:14px; padding:12px 16px; margin-bottom:14px; }
-    .activity-tag { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+    .activity-tag { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
     .activity-instruction { font-size:13px; color:var(--text-2); }
 
     /* ── Section divider ── */
@@ -260,7 +260,7 @@
     .comp-item:hover { border-color:rgba(30,198,255,0.3); }
     .comp-item-header { display:flex; align-items:center; justify-content:space-between; }
     .comp-item-left { display:flex; align-items:center; gap:10px; }
-    .comp-item-icon { font-size:22px; }
+    .comp-item-icon { display:flex; align-items:center; justify-content:center; }
     .comp-item-arrow { font-size:13px; color:var(--accent); font-family:'Rubik',sans-serif; font-weight:700; flex-shrink:0; }
     .comp-item-detail { font-size:13px; color:var(--text-2); line-height:1.65; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); animation:fadeUp 0.25s ease; }
     .comp-item-detail strong { color:var(--accent-hi); }
@@ -268,7 +268,7 @@
     /* ── Component map activity ── */
     .comp-map-card { background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:12px 14px; }
     .cm-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-    .cm-icon { font-size:22px; flex-shrink:0; }
+    .cm-icon { flex-shrink:0; display:flex; align-items:center; justify-content:center; }
     .cm-name { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--text); flex:1; }
     .cm-status { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
     .cm-options { display:flex; flex-direction:column; gap:6px; }
@@ -278,14 +278,19 @@
     .cm-opt.wrong   { border-color:var(--red);   background:rgba(255,80,80,0.08);   color:var(--red);   pointer-events:none; animation:shake 0.3s ease; }
     .cm-opt.reveal  { border-color:var(--green); color:var(--green); pointer-events:none; }
 
-    /* ── Video placeholder ── */
-    .video-ph { aspect-ratio:16/9; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; margin-bottom:12px; position:relative; overflow:hidden; background:rgba(4,14,28,0.7); border:1px solid var(--border); }
-    .video-ph::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,rgba(30,198,255,0.05),transparent 60%); }
+    /* ── Video ── */
     .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent 0%,rgba(30,198,255,0.5) 40%,rgba(91,224,255,0.8) 50%,rgba(30,198,255,0.5) 60%,transparent 100%); animation:scan 4s linear infinite; top:0; }
     @keyframes scan { 0%{top:0%;opacity:0} 5%{opacity:1} 95%{opacity:1} 100%{top:100%;opacity:0} }
-    .video-play-btn { width:52px; height:52px; border-radius:50%; background:rgba(30,198,255,0.12); border:1.5px solid rgba(30,198,255,0.4); display:flex; align-items:center; justify-content:center; font-size:18px; position:relative; z-index:1; box-shadow:0 0 24px rgba(30,198,255,0.2); }
-    .video-ph-label { font-size:13px; color:var(--text-3); position:relative; z-index:1; }
-    .video-duration { font-size:11px; color:var(--accent); background:rgba(30,198,255,0.1); border:1px solid rgba(30,198,255,0.2); padding:3px 12px; border-radius:20px; font-family:'Rubik',sans-serif; font-weight:700; position:relative; z-index:1; }
+
+    /* ── Icon images ── */
+    .city-ring img { width:44px; height:44px; object-fit:contain; }
+    .analogy-emoji img { width:20px; height:20px; object-fit:contain; }
+    .comp-item-icon img { width:22px; height:22px; object-fit:contain; }
+    .cs-icon img { width:24px; height:24px; object-fit:contain; }
+    .cm-icon img { width:22px; height:22px; object-fit:contain; }
+    .ex-icon img { width:28px; height:28px; object-fit:contain; }
+    .sp-icon img { width:22px; height:22px; object-fit:contain; }
+    img.icon-inline { width:16px; height:16px; object-fit:contain; vertical-align:middle; }
   </style>
 </head>
 <body>
@@ -306,11 +311,11 @@
 
     <!-- ① HOOK -->
     <div class="screen active" id="screen-0">
-      <p class="eyebrow">⚡ Mission 01</p>
+      <p class="eyebrow"><img src="../../../../assets/icons/unit-02/batch2/lightning-bolt.png" alt="" class="icon-inline"> Mission 01</p>
       <h1 class="hook-title grad">כמה מכשירים מחוברים לאינטרנט עכשיו?</h1>
 
       <div class="glass city-card gap">
-        <div class="city-ring">🌐</div>
+        <div class="city-ring"><img src="../../../../assets/icons/unit-01/internet-globe.png" alt=""></div>
         <div id="stat-hidden">
           <div class="stat-question">?</div>
           <p class="stat-hint">מה לדעתך?</p>
@@ -331,13 +336,13 @@
       </div>
 
       <div class="reveal-block" id="wa-reveal" onclick="revealWA()">
-        <span class="reveal-block-label">📱 לחץ לראות איך זה עובד</span>
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-01/smartphone.png" alt="" class="icon-inline"> לחץ לראות איך זה עובד</span>
       </div>
       <div class="reveal-answer" id="wa-answer" style="display:none">
         <div class="reveal-answer-label">ככה זה עובד</div>
         <div class="reveal-answer-text">
           הטלפון שלך שולח את ההודעה דרך ה<strong>רשת</strong>:<br><br>
-          📱 הטלפון שלך ← 🔀 הנתב הביתי ← 🌐 שרת WhatsApp ← 📱 הטלפון של החבר<br><br>
+          <img src="../../../../assets/icons/unit-01/smartphone.png" alt="" class="icon-inline"> הטלפון שלך ← <img src="../../../../assets/icons/unit-01/router.png" alt="" class="icon-inline"> הנתב הביתי ← <img src="../../../../assets/icons/unit-01/internet-globe.png" alt="" class="icon-inline"> שרת WhatsApp ← <img src="../../../../assets/icons/unit-01/smartphone.png" alt="" class="icon-inline"> הטלפון של החבר<br><br>
           כל מכשיר בדרך מזוהה לפי <strong>כתובת IP</strong> ייחודית — בדיוק כמו כתובת בית. בלי כתובת, ההודעה לא יודעת לאן ללכת.
         </div>
       </div>
@@ -345,7 +350,7 @@
 
     <!-- ② וידאו -->
     <div class="screen" id="screen-1">
-      <p class="eyebrow">🎬 סרטון מבוא</p>
+      <p class="eyebrow"><img src="../../../../assets/icons/unit-02/batch2/video-camera.png" alt="" class="icon-inline"> סרטון מבוא</p>
       <h2 class="grad section-title">לפני שמתחילים</h2>
 
       <video class="gap" src="https://kfaxdahsndfogksqhukt.supabase.co/storage/v1/object/public/video-editor-exports/exports/0b1f6f46-8746-4282-b6ad-54b780eceebf/3434bbc5-f55c-4561-86a0-11f58d69f51c.mp4" controls playsinline style="width:100%;border-radius:16px;background:#000;display:block;"></video>
@@ -389,19 +394,19 @@
       <div class="analogy-card glass gap">
         <div class="analogy-label">דוגמה מהחיים — קבוצת WhatsApp</div>
         <div class="analogy-row">
-          <span class="analogy-emoji">📱</span>
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-01/smartphone.png" alt=""></span>
           <span class="analogy-source">כל אחד בקבוצה</span>
           <span class="analogy-eq">=</span>
           <span class="analogy-target">מכשיר</span>
         </div>
         <div class="analogy-row">
-          <span class="analogy-emoji">💬</span>
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-01/chat-bubble.png" alt=""></span>
           <span class="analogy-source">ההודעות</span>
           <span class="analogy-eq">=</span>
           <span class="analogy-target">מידע</span>
         </div>
         <div class="analogy-row">
-          <span class="analogy-emoji">👥</span>
+          <span class="analogy-emoji"><img src="../../../../assets/icons/unit-01/group-users.png" alt=""></span>
           <span class="analogy-source">הקבוצה עצמה</span>
           <span class="analogy-eq">=</span>
           <span class="analogy-target">רשת</span>
@@ -415,7 +420,7 @@
         <div class="comp-item" onclick="toggleCompItem('ci-host',this)">
           <div class="comp-item-header">
             <div class="comp-item-left">
-              <span class="comp-item-icon">💻</span>
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-01/laptop-computer.png" alt=""></span>
               <div>
                 <span class="comp-chip-name" style="display:block">מארח</span>
                 <span class="comp-chip-en">Host</span>
@@ -432,7 +437,7 @@
         <div class="comp-item" onclick="toggleCompItem('ci-net',this)">
           <div class="comp-item-header">
             <div class="comp-item-left">
-              <span class="comp-item-icon">🔀</span>
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-01/router.png" alt=""></span>
               <div>
                 <span class="comp-chip-name" style="display:block">אביזרי רשת</span>
                 <span class="comp-chip-en">Router · Switch · Hub</span>
@@ -450,7 +455,7 @@
         <div class="comp-item" onclick="toggleCompItem('ci-media',this)">
           <div class="comp-item-header">
             <div class="comp-item-left">
-              <span class="comp-item-icon">📡</span>
+              <span class="comp-item-icon"><img src="../../../../assets/icons/unit-01/network-media.png" alt=""></span>
               <div>
                 <span class="comp-chip-name" style="display:block">מדיה</span>
                 <span class="comp-chip-en">כבל / Wi-Fi</span>
@@ -470,7 +475,7 @@
 
       <div class="cs-row gap">
         <div class="cs-card">
-          <div class="cs-icon">🖥️</div>
+          <div class="cs-icon"><img src="../../../../assets/icons/unit-01/desktop-computer.png" alt=""></div>
           <div class="cs-name">לקוח</div>
           <div class="cs-desc">מבקש מידע<br>דפדפן, אפליקציה</div>
           <span class="pp-toggle" onclick="toggleDetail('cs-client',this)">▾ פרטים</span>
@@ -479,7 +484,7 @@
           </div>
         </div>
         <div class="cs-card">
-          <div class="cs-icon">🗄️</div>
+          <div class="cs-icon"><img src="../../../../assets/icons/unit-01/server-rack.png" alt=""></div>
           <div class="cs-name">שרת</div>
           <div class="cs-desc">עונה לבקשות<br>שולח דפים, קבצים</div>
           <span class="pp-toggle" onclick="toggleDetail('cs-server',this)">▾ פרטים</span>
@@ -491,11 +496,11 @@
 
       <div class="section-divider">בדוק את עצמך</div>
       <div class="mc-block" id="mc-screen3">
-        <div class="mc-q">🤔 איזה רכיב מחבר את הבית לאינטרנט?</div>
+        <div class="mc-q"><img src="../../../../assets/icons/unit-02/batch2/question-mark.png" alt="" class="icon-inline"> איזה רכיב מחבר את הבית לאינטרנט?</div>
         <div class="mc-options">
-          <div class="mc-opt" onclick="answerMC(this,'mc-screen3',true)">🔀 נתב (Router)</div>
-          <div class="mc-opt" onclick="answerMC(this,'mc-screen3',false)">💻 מחשב</div>
-          <div class="mc-opt" onclick="answerMC(this,'mc-screen3',false)">📱 טלפון</div>
+          <div class="mc-opt" onclick="answerMC(this,'mc-screen3',true)"><img src="../../../../assets/icons/unit-01/router.png" alt="" class="icon-inline"> נתב (Router)</div>
+          <div class="mc-opt" onclick="answerMC(this,'mc-screen3',false)"><img src="../../../../assets/icons/unit-01/laptop-computer.png" alt="" class="icon-inline"> מחשב</div>
+          <div class="mc-opt" onclick="answerMC(this,'mc-screen3',false)"><img src="../../../../assets/icons/unit-01/smartphone.png" alt="" class="icon-inline"> טלפון</div>
         </div>
       </div>
     </div>
@@ -530,13 +535,13 @@
       </div>
 
       <div class="activity-banner">
-        <div class="activity-tag">🎮 פעילות — סיווג</div>
+        <div class="activity-tag"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt="" class="icon-inline"> פעילות — סיווג</div>
         <div class="activity-instruction">לאיזה סוג רשת שייכת כל דוגמה?</div>
       </div>
 
       <div class="classify-list" id="classifyList">
         <div class="classify-row" id="cls-0">
-          <div class="classify-scenario">📶 WiFi ב-McDonald's</div>
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-01/wifi-signal.png" alt="" class="icon-inline"> WiFi ב-McDonald's</div>
           <div class="classify-btns">
             <button class="cls-btn" onclick="classify(0,'LAN',true)">LAN</button>
             <button class="cls-btn" onclick="classify(0,'WAN',false)">WAN</button>
@@ -544,7 +549,7 @@
           </div>
         </div>
         <div class="classify-row" id="cls-1">
-          <div class="classify-scenario">🎮 Fortnite עם שחקן מיפן</div>
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt="" class="icon-inline"> Fortnite עם שחקן מיפן</div>
           <div class="classify-btns">
             <button class="cls-btn" onclick="classify(1,'LAN',false)">LAN</button>
             <button class="cls-btn" onclick="classify(1,'WAN',true)">WAN</button>
@@ -552,7 +557,7 @@
           </div>
         </div>
         <div class="classify-row" id="cls-2">
-          <div class="classify-scenario">🎧 אוזניות Bluetooth</div>
+          <div class="classify-scenario"><img src="../../../../assets/icons/unit-01/headphones.png" alt="" class="icon-inline"> אוזניות Bluetooth</div>
           <div class="classify-btns">
             <button class="cls-btn" onclick="classify(2,'LAN',false)">LAN</button>
             <button class="cls-btn" onclick="classify(2,'WAN',false)">WAN</button>
@@ -563,7 +568,7 @@
       <div id="classify-success" class="check-success" style="display:none">✓ סיווגת את כל הרשתות נכון!</div>
 
       <div class="reveal-block" id="p2p-reveal" onclick="revealP2P()" style="margin-top:12px">
-        <span class="reveal-block-label">🔗 יש עוד סוג — רשת P2P</span>
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-01/chain-link.png" alt="" class="icon-inline"> יש עוד סוג — רשת P2P</span>
       </div>
       <div class="reveal-answer" id="p2p-answer" style="display:none">
         <div class="reveal-answer-label">רשת עמית לעמית</div>
@@ -617,7 +622,7 @@
           <div class="pp-desc">הכתובת שרואים אותך לפיה באינטרנט. משתנה!</div>
           <span class="pp-toggle" onclick="toggleDetail('pub-detail',this)">▾ פרטים</span>
           <div class="pp-detail" id="pub-detail" style="display:none">
-            ייחודית בעולם. בדרך כלל כל המכשירים בבית משתמשים באותה כתובת חיצונית. הנתב הוא שמתרגם בין הכתובות הפנימיות לכתובת החיצונית — תהליך שנקרא NAT.
+            ייחודית בעולם. בדרך כלל כל המחשבים בבית משתמשים באותה כתובת חיצונית. הנתב הוא שמתרגם בין הכתובות הפנימיות לכתובת החיצונית — תהליך שנקרא NAT.
           </div>
         </div>
       </div>
@@ -646,7 +651,7 @@
       </div>
 
       <div class="reveal-block" id="ipconfig-reveal" onclick="revealIpconfig()">
-        <span class="reveal-block-label">💻 איך בודקים את ה-IP שלך? — פקודת ipconfig</span>
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-01/laptop-computer.png" alt="" class="icon-inline"> איך בודקים את ה-IP שלך? — פקודת ipconfig</span>
       </div>
       <div class="reveal-answer" id="ipconfig-answer" style="display:none">
         <div class="reveal-answer-label">נסה בעצמך</div>
@@ -657,17 +662,17 @@
           בחלון שנפתח, הקלד <strong>ipconfig</strong> ← לחץ Enter<br><br>
           <strong>פלט לדוגמה:</strong>
           <code style="font-family:monospace;font-size:12px;color:var(--accent-hi);background:rgba(0,0,0,0.35);display:block;padding:10px 12px;border-radius:8px;margin:10px 0;direction:ltr;text-align:left;line-height:1.8">IPv4 Address. . . : 192.168.1.15<br>Subnet Mask . . . : 255.255.255.0<br>Default Gateway . : 192.168.1.1</code>
-          🟢 <strong>IPv4 Address</strong> — כתובת ה-IP שלך ברשת הביתית<br>
-          🟡 <strong>Subnet Mask</strong> — מגדיר אילו מכשירים נמצאים באותה רשת<br>
-          🔵 <strong>Default Gateway</strong> — הנתב שלך — היציאה לאינטרנט
+          <img src="../../../../assets/icons/unit-02/batch2/dot-green.png" alt="" class="icon-inline"> <strong>IPv4 Address</strong> — כתובת ה-IP שלך ברשת הביתית<br>
+          <img src="../../../../assets/icons/unit-01/dot-yellow.png" alt="" class="icon-inline"> <strong>Subnet Mask</strong> — מגדיר אילו מכשירים נמצאים באותה רשת<br>
+          <img src="../../../../assets/icons/unit-02/batch2/dot-blue.png" alt="" class="icon-inline"> <strong>Default Gateway</strong> — הנתב שלך — היציאה לאינטרנט
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3)">
-            💡 <strong style="color:var(--text-2)">מטפורה:</strong> IP = מספר דירה &nbsp;·&nbsp; Gateway = דלת הבניין &nbsp;·&nbsp; האינטרנט = העולם שבחוץ
+            <img src="../../../../assets/icons/unit-01/lightbulb.png" alt="" class="icon-inline"> <strong style="color:var(--text-2)">מטפורה:</strong> IP = מספר דירה &nbsp;·&nbsp; Gateway = דלת הבניין &nbsp;·&nbsp; האינטרנט = העולם שבחוץ
           </div>
         </div>
       </div>
 
       <div class="reveal-block" id="ping-reveal" onclick="revealPing()" style="margin-top:10px">
-        <span class="reveal-block-label">📡 איך בודקים שיש חיבור? — פקודת ping</span>
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-01/network-media.png" alt="" class="icon-inline"> איך בודקים שיש חיבור? — פקודת ping</span>
       </div>
       <div class="reveal-answer" id="ping-answer" style="display:none">
         <div class="reveal-answer-label">נסה בעצמך</div>
@@ -675,9 +680,9 @@
           בשורת הפקודה כתוב: <strong>ping google.com</strong> ← לחץ Enter<br><br>
           <strong>פלט לדוגמה:</strong>
           <code style="font-family:monospace;font-size:12px;color:var(--accent-hi);background:rgba(0,0,0,0.35);display:block;padding:10px 12px;border-radius:8px;margin:10px 0;direction:ltr;text-align:left;line-height:1.8">Reply from 142.250.190.78: bytes=32 time=20ms TTL=117</code>
-          🟢 <strong>Reply</strong> — יש חיבור תקין<br>
-          ⏱️ <strong>time=20ms</strong> — זמן התגובה — ככל שקטן יותר, יותר מהיר<br>
-          ❌ <strong>Request timed out</strong> — אין חיבור, או שהאתר חסום
+          <img src="../../../../assets/icons/unit-02/batch2/dot-green.png" alt="" class="icon-inline"> <strong>Reply</strong> — יש חיבור תקין<br>
+          <img src="../../../../assets/icons/unit-01/timer.png" alt="" class="icon-inline"> <strong>time=20ms</strong> — זמן התגובה — ככל שקטן יותר, יותר מהיר<br>
+          <img src="../../../../assets/icons/unit-02/batch2/x-con.png" alt="" class="icon-inline"> <strong>Request timed out</strong> — אין חיבור, או שהאתר חסום
         </div>
       </div>
     </div>
@@ -685,7 +690,7 @@
     <!-- ⑦ פעילות — IP תקין? -->
     <div class="screen" id="screen-6">
       <div class="activity-banner">
-        <div class="activity-tag">🎮 פעילות</div>
+        <div class="activity-tag"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt="" class="icon-inline"> פעילות</div>
         <div class="activity-instruction">האם כתובת ה-IP תקינה? לחץ על ✓ או ✗ לכל כתובת</div>
       </div>
 
@@ -733,21 +738,21 @@
 
       <div class="example-cards gap">
         <div class="example-card">
-          <div class="ex-icon">📺</div>
+          <div class="ex-icon"><img src="../../../../assets/icons/unit-01/tv-screen.png" alt=""></div>
           <div class="ex-body">
             <div class="ex-title">לוחצים Play ביוטיוב</div>
             <div class="ex-desc">המחשב שולח בקשה עם ה-IP שלו → שרת יוטיוב שולח את הסרטון חזרה → הכל לפי כתובת.</div>
           </div>
         </div>
         <div class="example-card">
-          <div class="ex-icon">🎮</div>
+          <div class="ex-icon"><img src="../../../../assets/icons/unit-02/batch2/game-controller.png" alt=""></div>
           <div class="ex-body">
             <div class="ex-title">משחקים Fortnite אונליין</div>
             <div class="ex-desc">לכל שחקן יש IP. שרת המשחק יודע לאן לשלוח את המיקום של כל אחד — בזמן אמת.</div>
           </div>
         </div>
         <div class="example-card">
-          <div class="ex-icon">🏫</div>
+          <div class="ex-icon"><img src="../../../../assets/icons/unit-01/school-building.png" alt=""></div>
           <div class="ex-body">
             <div class="ex-title">רשת בית הספר</div>
             <div class="ex-desc">כל מחשב בכיתה מחובר ל-LAN. לכל אחד IP פנימי שונה. כולם יוצאים לאינטרנט דרך IP חיצוני אחד.</div>
@@ -756,7 +761,7 @@
       </div>
 
       <div class="reveal-block" id="q-reveal" onclick="revealQ()">
-        <span class="reveal-block-label">🤔 למה TikTok נטען כל כך מהר?</span>
+        <span class="reveal-block-label"><img src="../../../../assets/icons/unit-02/batch2/question-mark.png" alt="" class="icon-inline"> למה TikTok נטען כל כך מהר?</span>
       </div>
       <div class="reveal-answer" id="q-answer" style="display:none">
         <div class="reveal-answer-label">התשובה</div>
@@ -770,7 +775,7 @@
     <!-- ⑨ פעילות — מפת רכיבים -->
     <div class="screen" id="screen-8">
       <div class="activity-banner">
-        <div class="activity-tag">🗺️ פעילות — מפת רכיבים</div>
+        <div class="activity-tag"><img src="../../../../assets/icons/unit-01/map-icon.png" alt="" class="icon-inline"> פעילות — מפת רכיבים</div>
         <div class="activity-instruction">לכל רכיב — בחרו את ההגדרה הנכונה</div>
       </div>
 
@@ -779,7 +784,7 @@
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
 
         <div class="comp-map-card" id="cm-0" data-correct="1">
-          <div class="cm-header"><span class="cm-icon">💻</span><span class="cm-name">מארח <span style="color:var(--text-3);font-size:12px">Host</span></span><span class="cm-status" id="cms-0"></span></div>
+          <div class="cm-header"><span class="cm-icon"><img src="../../../../assets/icons/unit-01/laptop-computer.png" alt=""></span><span class="cm-name">מארח <span style="color:var(--text-3);font-size:12px">Host</span></span><span class="cm-status" id="cms-0"></span></div>
           <div class="cm-options">
             <button class="cm-opt" onclick="answerCM(0,false,this)">מחבר את הבית לאינטרנט</button>
             <button class="cm-opt" onclick="answerCM(0,true,this)">מכשיר ברשת שיכול לשלוח ולקבל מידע, עם IP ייחודי</button>
@@ -788,7 +793,7 @@
         </div>
 
         <div class="comp-map-card" id="cm-1" data-correct="0">
-          <div class="cm-header"><span class="cm-icon">🔀</span><span class="cm-name">נתב <span style="color:var(--text-3);font-size:12px">Router</span></span><span class="cm-status" id="cms-1"></span></div>
+          <div class="cm-header"><span class="cm-icon"><img src="../../../../assets/icons/unit-01/router.png" alt=""></span><span class="cm-name">נתב <span style="color:var(--text-3);font-size:12px">Router</span></span><span class="cm-status" id="cms-1"></span></div>
           <div class="cm-options">
             <button class="cm-opt" onclick="answerCM(1,true,this)">מחבר את הבית לאינטרנט ומנהל את תנועת הנתונים</button>
             <button class="cm-opt" onclick="answerCM(1,false,this)">מחבר מחשבים בתוך אותה רשת מקומית</button>
@@ -797,7 +802,7 @@
         </div>
 
         <div class="comp-map-card" id="cm-2" data-correct="1">
-          <div class="cm-header"><span class="cm-icon">🔌</span><span class="cm-name">מתג <span style="color:var(--text-3);font-size:12px">Switch</span></span><span class="cm-status" id="cms-2"></span></div>
+          <div class="cm-header"><span class="cm-icon"><img src="../../../../assets/icons/unit-01/network-switch.png" alt=""></span><span class="cm-name">מתג <span style="color:var(--text-3);font-size:12px">Switch</span></span><span class="cm-status" id="cms-2"></span></div>
           <div class="cm-options">
             <button class="cm-opt" onclick="answerCM(2,false,this)">מפיץ מידע לכל המחשבים ברשת</button>
             <button class="cm-opt" onclick="answerCM(2,true,this)">מחבר מחשבים בתוך הרשת המקומית — יעיל יותר מרכזת</button>
@@ -806,7 +811,7 @@
         </div>
 
         <div class="comp-map-card" id="cm-3" data-correct="2">
-          <div class="cm-header"><span class="cm-icon">📡</span><span class="cm-name">מדיה <span style="color:var(--text-3);font-size:12px">כבל / Wi-Fi</span></span><span class="cm-status" id="cms-3"></span></div>
+          <div class="cm-header"><span class="cm-icon"><img src="../../../../assets/icons/unit-01/network-media.png" alt=""></span><span class="cm-name">מדיה <span style="color:var(--text-3);font-size:12px">כבל / Wi-Fi</span></span><span class="cm-status" id="cms-3"></span></div>
           <div class="cm-options">
             <button class="cm-opt" onclick="answerCM(3,false,this)">מבקש מידע מהשרת</button>
             <button class="cm-opt" onclick="answerCM(3,false,this)">מכשיר שמחובר לרשת ויכול לשלוח ולקבל מידע</button>
@@ -815,7 +820,7 @@
         </div>
 
         <div class="comp-map-card" id="cm-4" data-correct="1">
-          <div class="cm-header"><span class="cm-icon">🖥️</span><span class="cm-name">לקוח <span style="color:var(--text-3);font-size:12px">Client</span></span><span class="cm-status" id="cms-4"></span></div>
+          <div class="cm-header"><span class="cm-icon"><img src="../../../../assets/icons/unit-01/desktop-computer.png" alt=""></span><span class="cm-name">לקוח <span style="color:var(--text-3);font-size:12px">Client</span></span><span class="cm-status" id="cms-4"></span></div>
           <div class="cm-options">
             <button class="cm-opt" onclick="answerCM(4,false,this)">עונה לבקשות ושולח דפים וקבצים</button>
             <button class="cm-opt" onclick="answerCM(4,true,this)">מבקש מידע מהשרת — דפדפן, אפליקציה</button>
@@ -824,7 +829,7 @@
         </div>
 
         <div class="comp-map-card" id="cm-5" data-correct="2">
-          <div class="cm-header"><span class="cm-icon">🗄️</span><span class="cm-name">שרת <span style="color:var(--text-3);font-size:12px">Server</span></span><span class="cm-status" id="cms-5"></span></div>
+          <div class="cm-header"><span class="cm-icon"><img src="../../../../assets/icons/unit-01/server-rack.png" alt=""></span><span class="cm-name">שרת <span style="color:var(--text-3);font-size:12px">Server</span></span><span class="cm-status" id="cms-5"></span></div>
           <div class="cm-options">
             <button class="cm-opt" onclick="answerCM(5,false,this)">מבקש מידע מהשרת</button>
             <button class="cm-opt" onclick="answerCM(5,false,this)">מנהל את תנועת הנתונים</button>
@@ -843,15 +848,15 @@
 
       <div class="summary-points gap">
         <div class="summary-point">
-          <div class="sp-icon">🌐</div>
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-01/internet-globe.png" alt=""></div>
           <div class="sp-text"><strong>רשת מחשבים</strong> — קבוצת מכשירים שמחוברים להעברת מידע. כמו קבוצת WhatsApp, רק הרבה יותר גדולה.</div>
         </div>
         <div class="summary-point">
-          <div class="sp-icon">🗂️</div>
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-01/folder-tabs.png" alt=""></div>
           <div class="sp-text"><strong>סוגי רשתות</strong> — LAN (בית/כיתה), WAN (אינטרנט), PAN (Bluetooth).</div>
         </div>
         <div class="summary-point">
-          <div class="sp-icon">📍</div>
+          <div class="sp-icon"><img src="../../../../assets/icons/unit-01/location-pin.png" alt=""></div>
           <div class="sp-text"><strong>כתובת IP</strong> — 4 מספרים (0–255) שמזהים כל מכשיר. בלי IP — אין תקשורת.</div>
         </div>
       </div>
