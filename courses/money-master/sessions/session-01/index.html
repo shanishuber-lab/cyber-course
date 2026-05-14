@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>תרגול מפגש 1 — Money Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&family=Heebo:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0D1B2A;
+      --bg-deep: #08111F;
+      --bg-mid:  #13294B;
+      --glass:   rgba(212, 175, 55, 0.07);
+      --gold:    #D4AF37;
+      --gold-hi: #F2D16B;
+      --gold-dk: #A67C1B;
+      --text:    #FFFFFF;
+      --text-2:  #C8D6E5;
+      --text-3:  #6B8CAE;
+      --border:  rgba(212, 175, 55, 0.18);
+      --green:   #22C55E;
+      --red:     #EF4444;
+      --warn:    #FCA5A5;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Heebo', sans-serif;
+      background: #08111F;
+      color: var(--text);
+    }
+
+    .bg-image {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        linear-gradient(rgba(8,17,31,0.62), rgba(8,17,31,0.62)),
+        url('../../financial-education-course-background-balanced.png') center/cover no-repeat;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 680px;
+      margin: 0 auto;
+      background: rgba(8,17,31,0.65);
+    }
+
+    /* ── Progress ── */
+    .progress-bar { height: 3px; background: rgba(212,175,55,0.1); overflow: hidden; flex-shrink: 0; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #A67C1B, #D4AF37, #F2D16B);
+      box-shadow: 0 0 12px rgba(212,175,55,0.5);
+      transition: width 0.5s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Header ── */
+    .unit-header {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,17,31,0.85);
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+    .unit-badge {
+      font-family: 'Rubik', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px rgba(212,175,55,0.6);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .screen-counter { font-size: 12px; color: var(--text-3); }
+
+    /* ── Screens ── */
+    .screens { flex: 1; overflow: hidden; position: relative; }
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      padding: 20px 20px 8px;
+      overflow-y: auto;
+      opacity: 0; pointer-events: none;
+      transform: translateX(-24px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .screen.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+    .screen.exit   { opacity: 0; transform: translateX(24px); pointer-events: none; }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 12px 20px 20px;
+      background: rgba(8,17,31,0.8);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .btn-next {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #A67C1B 0%, #D4AF37 50%, #F2D16B 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'Rubik', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #08111F;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(212,175,55,0.3);
+      transition: all 0.2s ease;
+      display: none;
+    }
+    .btn-next:hover  { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(212,175,55,0.45); }
+    .btn-next.visible { display: block; }
+
+    /* ── Atoms ── */
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+    }
+    .eyebrow {
+      font-family: 'Rubik', sans-serif;
+      font-weight: 700;
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .screen-title {
+      font-family: 'Rubik', sans-serif;
+      font-weight: 900;
+      font-size: clamp(22px, 5.5vw, 30px);
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .gold { color: var(--gold-hi); }
+
+    /* ── Screen 0: Intro ── */
+    .intro-card { padding: 24px 20px; text-align: center; margin-bottom: 16px; }
+    .intro-icon  { font-size: 54px; display: block; margin-bottom: 14px; }
+    .intro-body  { font-size: 15px; color: var(--text-2); line-height: 1.75; margin-bottom: 20px; }
+    .agenda-list { display: flex; flex-direction: column; gap: 10px; text-align: right; }
+    .agenda-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      background: rgba(212,175,55,0.05);
+      border: 1px solid rgba(212,175,55,0.1);
+      font-size: 14px;
+      color: var(--text-2);
+    }
+    .aicon { font-size: 18px; }
+
+    /* ── Screen 1: Timeline ── */
+    .tl-instruction {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.65;
+      padding: 12px 14px;
+      border-right: 2px solid var(--gold);
+      margin-bottom: 14px;
+    }
+    .timeline-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .timeline-card {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 13px;
+      background: rgba(212,175,55,0.05);
+      border: 2px solid rgba(212,175,55,0.13);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .timeline-card:active      { transform: scale(0.98); }
+    .timeline-card.placed      { border-color: var(--gold-dk); background: rgba(212,175,55,0.1); }
+    .timeline-card.tl-correct  { border-color: var(--green); background: rgba(34,197,94,0.08); }
+    .timeline-card.tl-wrong    { border-color: var(--red);   background: rgba(239,68,68,0.07); }
+    .tl-emoji-col { font-size: 32px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+    .tl-content   { flex: 1; }
+    .tl-name      { font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .tl-desc      { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+    .tl-problem   { font-size: 12px; color: var(--warn); margin-top: 5px; }
+    .tl-badge {
+      position: absolute;
+      top: -9px; left: -9px;
+      width: 25px; height: 25px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #A67C1B, #D4AF37);
+      color: #08111F;
+      font-family: 'Rubik', sans-serif;
+      font-weight: 900;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .tl-badge.show { display: flex; }
+    .tl-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .tl-reset-btn {
+      padding: 9px;
+      border-radius: 8px;
+      background: rgba(212,175,55,0.05);
+      border: 1px solid rgba(212,175,55,0.14);
+      color: var(--text-3);
+      font-family: 'Rubik', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tl-reset-btn:hover { color: var(--text-2); background: rgba(212,175,55,0.09); }
+    .tl-check-btn {
+      padding: 12px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #A67C1B, #D4AF37, #F2D16B);
+      border: none;
+      color: #08111F;
+      font-family: 'Rubik', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s;
+    }
+    .tl-check-btn.visible { display: block; }
+    .tl-feedback {
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.65;
+      display: none;
+      margin-top: 4px;
+    }
+    .tl-feedback.success { background: rgba(34,197,94,0.1);  border: 1px solid rgba(34,197,94,0.3);  color: #86efac; }
+    .tl-feedback.info    { background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.2); color: var(--gold-hi); }
+
+    /* ── Screen 2: Fun Fact ── */
+    .funfact-wrap { flex: 1; display: flex; align-items: center; }
+    .funfact-card { padding: 36px 28px; text-align: center; width: 100%; }
+    .funfact-icon  { font-size: 58px; margin-bottom: 14px; }
+    .funfact-label {
+      font-family: 'Rubik', sans-serif;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .funfact-text { font-size: 16px; line-height: 1.8; color: var(--text-2); }
+    .funfact-text strong { color: var(--gold-hi); }
+
+    /* ── Screens 3 & 4: Matching ── */
+    .match-header { margin-bottom: 12px; }
+    .match-sub    { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+    .match-counter { font-size: 13px; color: var(--text-3); margin-bottom: 12px; }
+    .match-counter span { color: var(--gold); font-weight: 700; }
+    .terms-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 3px 0 10px;
+      position: sticky;
+      top: 0;
+      background: #0D1B2A;
+      z-index: 10;
+    }
+    .term-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid rgba(212,175,55,0.22);
+      background: rgba(212,175,55,0.04);
+      font-family: 'Rubik', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .term-chip:active   { transform: scale(0.95); }
+    .term-chip.selected { border-color: var(--gold); background: rgba(212,175,55,0.14); color: var(--gold-hi); box-shadow: 0 0 14px rgba(212,175,55,0.22); }
+    .term-chip.matched  { border-color: var(--green); background: rgba(34,197,94,0.1); color: #86efac; cursor: default; opacity: 0.7; }
+    .defs-list { display: flex; flex-direction: column; gap: 10px; }
+    .def-card {
+      padding: 14px 16px;
+      border-radius: 13px;
+      background: rgba(212,175,55,0.04);
+      border: 2px solid rgba(212,175,55,0.1);
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.6;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .def-card:not(.matched):not(.shake):hover { border-color: rgba(212,175,55,0.3); background: rgba(212,175,55,0.07); }
+    .def-card.matched { border-color: var(--green); background: rgba(34,197,94,0.07); cursor: default; }
+    .def-card.matched::before { content: '✓  '; color: var(--green); font-weight: 700; }
+    @keyframes shake {
+      0%,100%{ transform: translateX(0); }
+      20%    { transform: translateX(-7px); }
+      40%    { transform: translateX(7px); }
+      60%    { transform: translateX(-4px); }
+      80%    { transform: translateX(4px); }
+    }
+    .def-card.shake { animation: shake 0.4s ease; border-color: var(--red) !important; background: rgba(239,68,68,0.06) !important; }
+    .match-success {
+      margin-top: 14px;
+      padding: 13px 16px;
+      border-radius: 10px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #86efac;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    /* ── Screen 5: Closing ── */
+    .closing-wrap  { flex: 1; display: flex; align-items: center; }
+    .closing-card  { padding: 32px 24px; text-align: center; width: 100%; }
+    .closing-icon  { font-size: 66px; margin-bottom: 16px; }
+    .closing-title { font-family: 'Rubik', sans-serif; font-weight: 900; font-size: 30px; margin-bottom: 14px; }
+    .closing-body  { font-size: 15px; color: var(--text-2); line-height: 1.75; margin-bottom: 24px; }
+    .next-preview  {
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: rgba(212,175,55,0.06);
+      border: 1px solid rgba(212,175,55,0.18);
+      font-size: 14px;
+      color: var(--text-2);
+      text-align: right;
+      line-height: 1.6;
+    }
+    .next-preview strong { color: var(--gold-hi); display: block; margin-bottom: 6px; font-size: 15px; }
+  </style>
+</head>
+<body>
+<div class="bg-image"></div>
+<div class="app">
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="unit-header">
+    <div class="unit-badge"><span class="badge-dot"></span>💰 Money Master</div>
+    <span class="screen-counter" id="screen-counter">1 / 7</span>
+  </div>
+
+  <div class="screens">
+
+    <!-- ── 0: Intro ── -->
+    <div class="screen active" id="screen-0">
+      <div class="eyebrow">תרגול · מפגש 1</div>
+      <h1 class="screen-title">מה זה <span class="gold">כסף?</span></h1>
+      <div class="glass intro-card">
+        <span class="intro-icon">💰</span>
+        <p class="intro-body">
+          למדנו היום איך כסף התפתח לאורך ההיסטוריה ואילו מושגים כלכליים חשוב להכיר.<br>
+          עכשיו ננסה את זה בעצמנו 💪
+        </p>
+        <div class="agenda-list">
+          <div class="agenda-item"><span class="aicon">⏳</span> ציר הזמן — מיון ההיסטוריה של הכסף</div>
+          <div class="agenda-item"><span class="aicon">🔗</span> התאמת מושגים — חלק א': הכנסה, הוצאה, חיסכון, השקעה</div>
+          <div class="agenda-item"><span class="aicon">🔗</span> התאמת מושגים — חלק ב': ריבית, תקציב, שוק ההון, יוקר מחיה</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 1: Timeline ── -->
+    <div class="screen" id="screen-1">
+      <div class="eyebrow">פעילות 1 / 3</div>
+      <h2 class="screen-title">ציר הזמן של <span class="gold">הכסף</span></h2>
+      <p class="tl-instruction">
+        לחצו על הכרטיסיות <strong>בסדר הכרונולוגי הנכון</strong> — מהישן ביותר לחדש ביותר.
+        הכרטיסייה שתלחצו עליה ראשונה תקבל את המספר 1, השנייה — 2, וכן הלאה.
+      </p>
+      <div class="timeline-list" id="timeline-list"></div>
+      <div class="tl-actions">
+        <button class="tl-reset-btn" onclick="resetTimeline()">↺ התחל מחדש</button>
+        <button class="tl-check-btn" id="tl-check-btn" onclick="checkTimeline()">בדוק ✓</button>
+      </div>
+      <div class="tl-feedback" id="tl-feedback"></div>
+    </div>
+
+    <!-- ── 2: Fun Fact 1 ── -->
+    <div class="screen" id="screen-2">
+      <div class="funfact-wrap">
+        <div class="glass funfact-card">
+          <div class="funfact-icon">🧂</div>
+          <div class="funfact-label">Fun Fact</div>
+          <p class="funfact-text">
+            המילה "משכורת" באנגלית — <strong>salary</strong> — מגיעה מהמילה הלטינית <strong>sal</strong>, שפירושה <strong>מלח</strong>.<br><br>
+            חיילים רומאים קיבלו חלק ממשכורתם במלח — כי הוא היה יקר ונדיר.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3: Matching Part 1 ── -->
+    <div class="screen" id="screen-3">
+      <div class="eyebrow">פעילות 2 / 4 — חלק א'</div>
+      <h2 class="screen-title">התאמת <span class="gold">מושגים</span></h2>
+      <p class="match-sub" style="margin-bottom:10px;">בחרו מושג, ואז לחצו על ההגדרה המתאימה לו.</p>
+      <div class="match-counter">הותאמו: <span id="match-count-1">0</span> / 4</div>
+      <div class="terms-row" id="terms-row-1"></div>
+      <div class="defs-list" id="defs-list-1"></div>
+      <div class="match-success" id="match-success-1">✨ מצוין! עוברים לחלק הבא</div>
+    </div>
+
+    <!-- ── 4: Fun Fact 2 ── -->
+    <div class="screen" id="screen-4">
+      <div class="funfact-wrap">
+        <div class="glass funfact-card">
+          <div class="funfact-icon">🧠</div>
+          <div class="funfact-label">Fun Fact</div>
+          <p class="funfact-text">
+            איינשטיין (לפי האגדה) קרא לריבית דריבית <strong>"הפלא השמיני של העולם"</strong>.<br><br>
+            מי שמשקיע <strong>1,000 ₪ בגיל 15</strong> בריבית של 7% בשנה — יקבל כ-<strong>15,000 ₪ עד גיל 55</strong>.<br>
+            בלי לעשות כלום.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 5: Matching Part 2 ── -->
+    <div class="screen" id="screen-5">
+      <div class="eyebrow">פעילות 3 / 4 — חלק ב'</div>
+      <h2 class="screen-title">התאמת <span class="gold">מושגים</span></h2>
+      <p class="match-sub" style="margin-bottom:10px;">בחרו מושג, ואז לחצו על ההגדרה המתאימה לו.</p>
+      <div class="match-counter">הותאמו: <span id="match-count-2">0</span> / 4</div>
+      <div class="terms-row" id="terms-row-2"></div>
+      <div class="defs-list" id="defs-list-2"></div>
+      <div class="match-success" id="match-success-2">🎉 כל המושגים הותאמו נכון! מרשים.</div>
+    </div>
+
+    <!-- ── 6: Closing ── -->
+    <div class="screen" id="screen-6">
+      <div class="closing-wrap">
+        <div class="glass closing-card">
+          <div class="closing-icon">🏆</div>
+          <h2 class="closing-title">כל <span class="gold">הכבוד!</span></h2>
+          <p class="closing-body">
+            סיימתם את תרגול מפגש 1.<br>
+            עכשיו אתם כבר יודעים איך כסף התפתח לאורך ההיסטוריה ומדברים כלכלה כמו מקצוענים.
+          </p>
+          <div class="next-preview">
+            <strong>📅 במפגש הבא —</strong>
+            נדבר על ניהול תקציב חכם ועל חוק 50/30/20 שמשנה את האופן שבו מסתכלים על כסף.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <div class="footer">
+    <button class="btn-next visible" id="btn-next" onclick="nextScreen()">בוא נתחיל ←</button>
+  </div>
+
+</div>
+
+<script>
+/* ── Data ── */
+const timelineData = [
+  {
+    id: 0, emoji: '🤝', text: 'סחר חליפין',
+    desc: 'החלפת מוצרים ישירות בין אנשים — ללא כסף בכלל',
+    problem: '⚠️ הבעיה: רועה הצאן לא בהכרח אוהב דגים'
+  },
+  {
+    id: 1, emoji: '🌾', text: 'סחורות',
+    desc: 'חיטה, בקר, שמן ומלח שימשו כסף מוסכם בין שבטים',
+    problem: '⚠️ הבעיה: לסחורות יש משקל רב — קשה לשאת'
+  },
+  {
+    id: 2, emoji: '🪙', text: 'מטבעות מתכת',
+    desc: 'זהב וכסף הוטבעו למטבעות — קל יותר לנשיאה ולמדידת ערך',
+    problem: '⚠️ הבעיה: גם המטבעות היו כבדים מאוד בכמות גדולה'
+  },
+  {
+    id: 3, emoji: '💵', text: 'שטרות',
+    desc: 'נייר שמייצג ערך — קל, נוח, ואפשר להדפיס בכמויות',
+    problem: null
+  },
+  {
+    id: 4, emoji: '💳', text: 'כסף דיגיטלי',
+    desc: 'תשלום בכרטיס ובאפליקציה — הכסף "זזה" בין חשבונות בלי לגעת בו',
+    problem: null
+  },
+  {
+    id: 5, emoji: '₿', text: 'מטבעות דיגיטליים',
+    desc: 'ביטקוין וקריפטו — ללא בנק מרכזי, מבוסס טכנולוגיית בלוקצ\'יין',
+    problem: null
+  },
+];
+
+const matchPart1 = [
+  {
+    term: 'הכנסה',
+    definition: 'כסף שנכנס אליך — משכורת, דמי כיס, עבודה, הכנסות מהשקעות. ממנה משלמים על כל מה שצריך ורוצים'
+  },
+  {
+    term: 'הוצאה',
+    definition: 'כל כסף שיוצא לקניית מוצרים או שירותים. יכולה להיות קבועה (שכירות) או משתנה (קניות, בילוי)'
+  },
+  {
+    term: 'חיסכון',
+    definition: 'כסף שמניחים בצד ולא מוציאים מיד — לטובת מטרות עתידיות כמו טיול, ציוד, או מצב חירום'
+  },
+  {
+    term: 'השקעה',
+    definition: 'שימוש בכסף כדי להרוויח יותר כסף בעתיד — בשוק ההון, נדל"ן, או עסק. יש סיכון, אך גם פוטנציאל'
+  },
+];
+
+const matchPart2 = [
+  {
+    term: 'ריבית',
+    definition: 'הרווח שמקבלים על כסף שהופקד בבנק — הפקדת 1,000 ₪ וקיבלת 1,050 ₪ בסוף השנה? זו ריבית'
+  },
+  {
+    term: 'תקציב',
+    definition: 'תכנון מראש של הכנסות והוצאות — כלי שעוזר לדעת לאן הכסף הולך ולא להיתפס בהפתעה'
+  },
+  {
+    term: 'שוק ההון',
+    definition: 'מקום שבו קונים ומוכרים מניות ואגרות חוב — ניתן להרוויח ממנו, אך גם להפסיד'
+  },
+  {
+    term: 'יוקר מחיה',
+    definition: 'רמת המחירים הכללית — כמה עולה סל קניות, שכירות, תחבורה. כשיוקר המחיה עולה, הכסף שלך שווה פחות'
+  },
+];
+
+/* ── State ── */
+let currentScreen   = 0;
+const TOTAL_SCREENS = 7;
+let timelineOrder   = [];
+let tlShuffled      = shuffle([...timelineData]);
+let tlChecked       = false;
+
+let selectedTerm1   = null;
+let matched1        = new Set();
+let selectedTerm2   = null;
+let matched2        = new Set();
+
+/* ── Helpers ── */
+function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+function showBtn(v)   { document.getElementById('btn-next').classList.toggle('visible', v); }
+
+/* ── Navigation ── */
+function nextScreen() {
+  if (currentScreen >= TOTAL_SCREENS - 1) return;
+  const cur = document.getElementById(`screen-${currentScreen}`);
+  cur.classList.remove('active');
+  cur.classList.add('exit');
+  setTimeout(() => cur.classList.remove('exit'), 350);
+  currentScreen++;
+  document.getElementById(`screen-${currentScreen}`).classList.add('active');
+  updateUI();
+  if (currentScreen === 1) renderTimeline();
+  if (currentScreen === 3) renderMatching(matchPart1, 'terms-row-1', 'defs-list-1', 1);
+  if (currentScreen === 5) renderMatching(matchPart2, 'terms-row-2', 'defs-list-2', 2);
+}
+
+function updateUI() {
+  const pct = ((currentScreen + 1) / TOTAL_SCREENS) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('screen-counter').textContent = `${currentScreen + 1} / ${TOTAL_SCREENS}`;
+  const btn = document.getElementById('btn-next');
+  if      (currentScreen === 0) { btn.textContent = 'בוא נתחיל ←'; showBtn(true); }
+  else if (currentScreen === 1) { showBtn(false); }
+  else if (currentScreen === 2) { btn.textContent = 'הבא ←'; showBtn(true); }
+  else if (currentScreen === 3) { btn.textContent = 'לחלק הבא ←'; showBtn(false); }
+  else if (currentScreen === 4) { btn.textContent = 'הבא ←'; showBtn(true); }
+  else if (currentScreen === 5) { btn.textContent = 'סיום ←'; showBtn(false); }
+  else if (currentScreen === 6) { showBtn(false); }
+}
+
+/* ── Timeline ── */
+function renderTimeline() {
+  const list = document.getElementById('timeline-list');
+  list.innerHTML = '';
+  tlShuffled.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'timeline-card';
+    card.id        = `tl-${item.id}`;
+    card.innerHTML = `
+      <span class="tl-badge" id="tl-badge-${item.id}"></span>
+      <span class="tl-emoji-col">${item.emoji}</span>
+      <div class="tl-content">
+        <div class="tl-name">${item.text}</div>
+        <div class="tl-desc">${item.desc}</div>
+        ${item.problem ? `<div class="tl-problem">${item.problem}</div>` : ''}
+      </div>`;
+    card.onclick = () => handleTimelineClick(item.id, card);
+    list.appendChild(card);
+  });
+}
+
+function handleTimelineClick(id, card) {
+  if (tlChecked || timelineOrder.includes(id)) return;
+  timelineOrder.push(id);
+  card.classList.add('placed');
+  const badge = document.getElementById(`tl-badge-${id}`);
+  badge.textContent = timelineOrder.length;
+  badge.classList.add('show');
+  if (timelineOrder.length === timelineData.length) {
+    document.getElementById('tl-check-btn').classList.add('visible');
+  }
+}
+
+function resetTimeline() {
+  timelineOrder = [];
+  tlChecked     = false;
+  tlShuffled    = shuffle([...timelineData]);
+  document.getElementById('tl-check-btn').classList.remove('visible');
+  const fb = document.getElementById('tl-feedback');
+  fb.style.display = 'none';
+  fb.className = 'tl-feedback';
+  showBtn(false);
+  renderTimeline();
+}
+
+function checkTimeline() {
+  tlChecked = true;
+  let allOk = true;
+  timelineOrder.forEach((id, idx) => {
+    const card = document.getElementById(`tl-${id}`);
+    if (id === idx) { card.classList.add('tl-correct'); }
+    else            { card.classList.add('tl-wrong'); allOk = false; }
+  });
+  document.getElementById('tl-check-btn').classList.remove('visible');
+  const fb = document.getElementById('tl-feedback');
+  fb.style.display = 'block';
+  if (allOk) {
+    fb.className = 'tl-feedback success';
+    fb.innerHTML = '🎉 מושלם! ידעתם את הסדר הכרונולוגי הנכון!';
+  } else {
+    fb.className = 'tl-feedback info';
+    fb.innerHTML = 'לא רע! הסדר הנכון:<br>🤝 סחר חליפין → 🌾 סחורות → 🪙 מטבעות מתכת → 💵 שטרות → 💳 כסף דיגיטלי → ₿ מטבעות דיגיטליים';
+  }
+  document.getElementById('btn-next').textContent = 'הבא ←';
+  showBtn(true);
+}
+
+/* ── Matching ── */
+function renderMatching(data, termsId, defsId, part) {
+  const termsEl = document.getElementById(termsId);
+  const defsEl  = document.getElementById(defsId);
+  termsEl.innerHTML = '';
+  defsEl.innerHTML  = '';
+  if (part === 1) { selectedTerm1 = null; matched1 = new Set(); }
+  else            { selectedTerm2 = null; matched2 = new Set(); }
+
+  shuffle([...data]).forEach(item => {
+    const chip = document.createElement('div');
+    chip.className    = 'term-chip';
+    chip.dataset.term = item.term;
+    chip.dataset.part = part;
+    chip.textContent  = item.term;
+    chip.onclick      = () => selectTerm(item.term, chip, part);
+    termsEl.appendChild(chip);
+  });
+
+  shuffle([...data]).forEach(item => {
+    const card = document.createElement('div');
+    card.className    = 'def-card';
+    card.dataset.term = item.term;
+    card.dataset.part = part;
+    card.textContent  = item.definition;
+    card.onclick      = () => selectDef(item.term, card, part);
+    defsEl.appendChild(card);
+  });
+}
+
+function selectTerm(term, el, part) {
+  const matched = part === 1 ? matched1 : matched2;
+  if (matched.has(term)) return;
+  const selector = `.term-chip[data-part="${part}"].selected`;
+  document.querySelectorAll(selector).forEach(c => c.classList.remove('selected'));
+  if ((part === 1 ? selectedTerm1 : selectedTerm2) === term) {
+    if (part === 1) selectedTerm1 = null;
+    else            selectedTerm2 = null;
+    return;
+  }
+  if (part === 1) selectedTerm1 = term;
+  else            selectedTerm2 = term;
+  el.classList.add('selected');
+}
+
+function selectDef(term, el, part) {
+  const selected = part === 1 ? selectedTerm1 : selectedTerm2;
+  const matched  = part === 1 ? matched1 : matched2;
+  if (!selected || el.classList.contains('matched')) return;
+
+  if (selected === term) {
+    el.classList.add('matched');
+    const chip = document.querySelector(`.term-chip[data-part="${part}"][data-term="${selected}"]`);
+    chip.classList.remove('selected');
+    chip.classList.add('matched');
+    matched.add(selected);
+    if (part === 1) selectedTerm1 = null;
+    else            selectedTerm2 = null;
+
+    const countId = `match-count-${part}`;
+    document.getElementById(countId).textContent = matched.size;
+
+    const total = part === 1 ? matchPart1.length : matchPart2.length;
+    if (matched.size === total) {
+      document.getElementById(`match-success-${part}`).style.display = 'block';
+      showBtn(true);
+    }
+  } else {
+    el.classList.add('shake');
+    setTimeout(() => el.classList.remove('shake'), 450);
+  }
+}
+
+/* Init */
+updateUI();
+</script>
+</body>
+</html>
