@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>יחידה 4 — לדבר עם שרתים: HTTP ו-curl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&family=Heebo:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --bg:#040E1C; --bg-mid:#0B2E4F; --glass:rgba(8,28,52,0.55);
+  --accent:#1EC6FF; --accent-hi:#5BE0FF; --accent-str:#00AEEF;
+  --glow:rgba(30,198,255,0.35); --glow-str:rgba(30,198,255,0.6);
+  --text:#FFFFFF; --text-2:#C7D3E0; --text-3:#7F9BB3;
+  --border:rgba(30,198,255,0.14);
+  --green:#00DC78; --red:#FF5050; --yellow:#FFD700; --orange:#FF8C42;
+}
+html,body { height:100%; overflow:hidden; }
+body { font-family:'Heebo',sans-serif; background:var(--bg); color:var(--text); }
+h1,h2,h3 { font-family:'Rubik',sans-serif; font-weight:900; }
+
+/* Background */
+.bg-image { position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:linear-gradient(rgba(4,14,28,0.62),rgba(4,14,28,0.62)),
+    url('../../../../assets/icons/unit-01/cyber-networks-course-background.png') center/cover no-repeat; }
+.bg-grid { position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:linear-gradient(rgba(30,198,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(30,198,255,0.035) 1px,transparent 1px);
+  background-size:48px 48px; }
+.bg-blob { position:fixed; z-index:0; border-radius:50%; filter:blur(90px); pointer-events:none; }
+.bg-blob-1 { width:500px; height:500px; top:-160px; left:-100px; background:radial-gradient(circle,rgba(30,198,255,0.09),transparent 70%); }
+.bg-blob-2 { width:400px; height:400px; bottom:-100px; right:-80px; background:radial-gradient(circle,rgba(0,80,160,0.14),transparent 70%); }
+
+/* App shell */
+.app { position:relative; z-index:1; display:flex; flex-direction:column; height:100dvh; max-width:680px; margin:0 auto; background:rgba(4,14,28,0.65); }
+.progress-bar { height:3px; background:rgba(30,198,255,0.08); overflow:hidden; flex-shrink:0; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent-str),var(--accent-hi)); box-shadow:0 0 12px var(--glow-str); transition:width 0.5s cubic-bezier(.4,0,.2,1); position:relative; }
+.progress-fill::after { content:''; position:absolute; top:0; right:0; width:40px; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4)); animation:shimmer 2s linear infinite; }
+@keyframes shimmer { 0%{transform:translateX(40px);opacity:0} 50%{opacity:1} 100%{transform:translateX(-200px);opacity:0} }
+.unit-header { padding:11px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:rgba(4,14,28,0.7); backdrop-filter:blur(10px); flex-shrink:0; }
+.unit-badge { font-family:'Rubik',sans-serif; font-weight:700; font-size:11px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:6px; }
+.badge-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--glow-str); animation:blink 2s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.screen-counter { font-size:12px; color:var(--text-3); }
+
+/* Screens */
+.screens { flex:1; overflow:hidden; position:relative; }
+.screen { position:absolute; inset:0; display:flex; flex-direction:column; padding:20px 20px 8px; overflow-y:auto; opacity:0; pointer-events:none; transform:translateX(-30px); transition:opacity 0.3s ease,transform 0.3s ease; }
+.screen.active { opacity:1; pointer-events:all; transform:translateX(0); }
+.screen.exit { opacity:0; transform:translateX(30px); pointer-events:none; }
+
+/* Nav */
+.dots { display:flex; justify-content:center; gap:5px; padding:8px 0 4px; flex-shrink:0; }
+.dot { width:5px; height:5px; border-radius:3px; background:rgba(30,198,255,0.12); transition:all 0.35s cubic-bezier(.4,0,.2,1); cursor:pointer; }
+.dot.active { width:20px; background:linear-gradient(90deg,var(--accent-str),var(--accent-hi)); box-shadow:0 0 10px var(--glow); }
+.nav { padding:6px 20px 20px; display:flex; gap:10px; justify-content:center; align-items:center; flex-shrink:0; }
+.btn { border:none; border-radius:14px; font-family:'Rubik',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:all 0.22s ease; }
+.btn-primary { padding:13px 44px; background:linear-gradient(135deg,var(--accent),var(--accent-str)); color:#040E1C; border-radius:8px; box-shadow:0 4px 20px rgba(30,198,255,0.3); }
+.btn-primary:hover { box-shadow:0 6px 32px rgba(30,198,255,0.55); transform:translateY(-1px); }
+.btn-back { padding:13px 18px; background:rgba(30,198,255,0.06); color:var(--text-3); border:1px solid rgba(30,198,255,0.15); border-radius:8px; }
+.btn-back:hover { color:var(--text-2); background:rgba(30,198,255,0.1); }
+
+/* Atoms */
+.eyebrow { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2.5px; text-transform:uppercase; margin-bottom:10px; }
+.section-title { font-size:18px; margin-bottom:12px; }
+.gap { margin-bottom:12px; }
+.card { background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+.card-green { border-color:rgba(0,220,120,0.25); background:rgba(0,220,120,0.04); }
+.card-red   { border-color:rgba(255,80,80,0.25); background:rgba(255,80,80,0.04); }
+.concept-pill { background:linear-gradient(135deg,rgba(30,198,255,0.1),rgba(0,174,239,0.04)); border:1px solid rgba(30,198,255,0.22); border-radius:12px; padding:13px 16px; font-size:14px; color:var(--text-2); line-height:1.55; margin-bottom:12px; }
+.concept-pill strong { color:var(--accent-hi); font-family:'Rubik',sans-serif; }
+.insight-box { border-radius:12px; padding:13px 16px; border-right:3px solid var(--accent); background:rgba(30,198,255,0.05); font-size:14px; color:var(--text-2); line-height:1.6; margin-bottom:12px; }
+.insight-box.green  { border-right-color:var(--green);  background:rgba(0,220,120,0.05); }
+.insight-box.red    { border-right-color:var(--red);    background:rgba(255,80,80,0.05); }
+.insight-box.yellow { border-right-color:var(--yellow); background:rgba(255,215,0,0.05); }
+.section-divider { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--text-3); letter-spacing:1.5px; text-transform:uppercase; margin:14px 0 10px; display:flex; align-items:center; gap:8px; }
+.section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.reveal-answer { background:var(--glass); border:1px solid rgba(30,198,255,0.15); border-right:3px solid var(--accent); border-radius:12px; padding:16px; animation:fadeUp 0.3s ease; }
+.reveal-answer-label { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.activity-banner { background:linear-gradient(135deg,rgba(30,198,255,0.1),rgba(0,174,239,0.04)); border:1px solid rgba(30,198,255,0.22); border-radius:14px; padding:12px 16px; margin-bottom:14px; }
+.activity-tag { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+.activity-instruction { font-size:13px; color:var(--text-2); }
+
+/* Objectives */
+.obj-list { display:flex; flex-direction:column; gap:10px; }
+.obj-item { display:flex; align-items:flex-start; gap:14px; padding:14px 16px; border-radius:14px; background:var(--glass); border:1px solid var(--border); transition:border-color 0.25s; }
+.obj-item:hover { border-color:rgba(30,198,255,0.35); }
+.obj-num { width:30px; height:30px; flex-shrink:0; background:linear-gradient(135deg,rgba(30,198,255,0.2),rgba(0,174,239,0.1)); border:1px solid rgba(30,198,255,0.25); border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Rubik',sans-serif; font-weight:900; font-size:13px; color:var(--accent); }
+.obj-text { font-size:14px; line-height:1.45; padding-top:4px; }
+
+/* HTTP dialogue */
+.http-convo { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.http-msg { display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px; }
+.http-msg.req { background:rgba(30,198,255,0.06); border:1px solid rgba(30,198,255,0.18); border-right:3px solid var(--accent); }
+.http-msg.res { background:rgba(0,220,120,0.05); border:1px solid rgba(0,220,120,0.18); border-right:3px solid var(--green); }
+.http-side { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; flex-shrink:0; margin-top:2px; width:44px; }
+.http-side.s-req { color:var(--accent); }
+.http-side.s-res { color:var(--green); }
+.http-text { font-family:'Rubik',monospace; font-size:12px; color:var(--text-2); line-height:1.7; direction:ltr; unicode-bidi:isolate; }
+
+/* Annotated terminal lines */
+.term-block { background:rgba(4,14,28,0.85); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:12px; }
+.term-bar { display:flex; align-items:center; gap:6px; padding:8px 12px; background:rgba(30,198,255,0.04); border-bottom:1px solid var(--border); }
+.term-dot { width:8px; height:8px; border-radius:50%; }
+.td-r{background:#FF5F57;} .td-y{background:#FEBC2E;} .td-g{background:#28C840;}
+.term-title { font-size:11px; color:var(--text-3); margin-right:auto; font-family:'Rubik',sans-serif; }
+.term-body { padding:12px 14px; font-family:'Rubik',monospace; font-size:12px; line-height:1.9; direction:ltr; unicode-bidi:isolate; }
+.tc-prompt{color:var(--green);} .tc-cmd{color:var(--text);}
+.tc-dim{color:rgba(168,216,255,0.35);} .tc-ok{color:var(--green);}
+.tc-req{color:#7EC8FF;} .tc-res{color:#A8FFD8;} .tc-head{color:#D4B8FF;}
+.tc-body{color:rgba(255,255,255,0.5);} .tc-warn{color:var(--orange);} .tc-err{color:var(--red);}
+.ann-line { font-family:'Rubik',monospace; font-size:12px; padding:7px 14px; line-height:1.8; cursor:pointer; transition:background 0.15s; }
+.ann-line:hover { background:rgba(30,198,255,0.06); }
+.ann-line.hl { border-right:3px solid var(--accent); background:rgba(30,198,255,0.05); }
+.ann-line.hl-res { border-right:3px solid var(--green); background:rgba(0,220,120,0.04); }
+.ann-pop { display:none; font-size:12px; color:var(--text-2); background:rgba(8,28,52,0.95); border:1px solid var(--border); border-radius:8px; padding:9px 12px; margin:0 12px 6px; line-height:1.5; animation:fadeUp 0.2s ease; direction:rtl; unicode-bidi:isolate; }
+.ann-pop.show { display:block; }
+
+/* Status codes */
+.status-card { border-radius:12px; border:1px solid var(--border); background:var(--glass); overflow:hidden; cursor:pointer; transition:border-color 0.2s; margin-bottom:8px; }
+.status-card:hover { border-color:rgba(30,198,255,0.3); }
+.status-header { display:flex; align-items:center; gap:12px; padding:11px 14px; }
+.status-code { font-family:'Rubik',sans-serif; font-weight:900; font-size:22px; min-width:48px; text-align:center; }
+.status-name { font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; }
+.status-sub { font-size:12px; color:var(--text-3); margin-top:1px; }
+.status-chevron { margin-right:auto; color:var(--text-3); transition:transform 0.25s; }
+.status-card.open .status-chevron { transform:rotate(90deg); }
+.status-detail { max-height:0; overflow:hidden; transition:max-height 0.35s ease; padding:0 14px; font-size:13px; color:var(--text-2); line-height:1.6; }
+.status-card.open .status-detail { max-height:180px; padding:0 14px 13px; }
+
+/* ── Terminal Simulator ── */
+.sim-wrap { background:rgba(4,14,28,0.9); border:1px solid rgba(30,198,255,0.2); border-radius:12px; overflow:hidden; margin-bottom:12px; }
+.sim-bar { display:flex; align-items:center; gap:6px; padding:8px 12px; background:rgba(30,198,255,0.04); border-bottom:1px solid var(--border); }
+.sim-output { padding:10px 14px; min-height:120px; max-height:210px; overflow-y:auto; font-family:'Rubik',monospace; font-size:12px; line-height:1.85; direction:ltr; unicode-bidi:isolate; }
+.sim-input-row { display:flex; align-items:center; gap:6px; padding:8px 14px; border-top:1px solid var(--border); background:rgba(4,14,28,0.5); direction:ltr; }
+.sim-input { flex:1; background:transparent; border:none; outline:none; font-family:'Rubik',monospace; font-size:13px; color:var(--text); caret-color:var(--accent); }
+.sim-input::placeholder { color:rgba(127,155,179,0.5); }
+.hint-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.hint-btn { padding:5px 12px; border-radius:7px; border:1px solid rgba(30,198,255,0.2); background:rgba(30,198,255,0.05); color:var(--accent); font-family:'Rubik',monospace; font-size:11px; cursor:pointer; transition:all 0.2s; }
+.hint-btn:hover { background:rgba(30,198,255,0.12); border-color:rgba(30,198,255,0.4); }
+
+/* Quiz */
+.mc-block { background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; }
+.mc-q { font-size:14px; color:var(--text-2); margin-bottom:12px; line-height:1.4; }
+.mc-options { display:flex; flex-direction:column; gap:7px; }
+.mc-opt { background:rgba(30,198,255,0.04); border:1px solid rgba(30,198,255,0.15); border-radius:9px; padding:10px 14px; font-size:14px; color:var(--text-2); cursor:pointer; text-align:right; transition:all 0.2s; font-family:'Heebo',sans-serif; }
+.mc-opt:hover { border-color:rgba(30,198,255,0.35); background:rgba(30,198,255,0.08); }
+.mc-opt.correct { border-color:var(--green); background:rgba(0,220,120,0.08); color:var(--green); pointer-events:none; }
+.mc-opt.wrong   { border-color:var(--red);   background:rgba(255,80,80,0.08); color:var(--red); pointer-events:none; animation:shake 0.3s ease; }
+.mc-opt.reveal  { border-color:var(--green); color:var(--green); pointer-events:none; }
+.mc-feedback { font-size:12px; margin-top:8px; line-height:1.45; }
+.mc-feedback.ok { color:var(--green); } .mc-feedback.err { color:var(--red); }
+@keyframes shake { 0%,100%{transform:translateX(0)} 30%{transform:translateX(-4px)} 70%{transform:translateX(4px)} }
+
+/* Summary */
+.summary-points { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.summary-point { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; background:var(--glass); border:1px solid var(--border); border-radius:13px; }
+.sp-icon { flex-shrink:0; display:flex; align-items:center; justify-content:center; width:28px; height:28px; }
+.sp-text { font-size:14px; color:var(--text-2); line-height:1.45; }
+.sp-text strong { color:var(--text); font-family:'Rubik',sans-serif; }
+
+/* Next unit card */
+.next-card { border-radius:14px; border:1px solid rgba(30,198,255,0.25); background:linear-gradient(135deg,rgba(30,198,255,0.06),rgba(0,174,239,0.02)); padding:16px; display:flex; align-items:center; gap:14px; margin-top:4px; }
+.next-icon { flex-shrink:0; width:40px; height:40px; border-radius:10px; background:rgba(30,198,255,0.1); border:1px solid rgba(30,198,255,0.2); display:flex; align-items:center; justify-content:center; }
+.next-label { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.next-text { font-size:14px; color:var(--text-2); line-height:1.4; }
+
+.mono { font-family:'Rubik',monospace; }
+.t-accent{color:var(--accent);} .t-green{color:var(--green);}
+.t-red{color:var(--red);} .t-yellow{color:var(--yellow);}
+.t-muted{color:var(--text-3);}
+.check-success { text-align:center; font-family:'Rubik',sans-serif; font-weight:700; font-size:14px; color:var(--green); background:rgba(0,220,120,0.07); border:1px solid rgba(0,220,120,0.25); border-radius:10px; padding:12px; animation:fadeUp 0.3s ease; margin-top:12px; }
+
+/* Video placeholder */
+.vp-wrap { border:1px dashed rgba(30,198,255,0.28); border-radius:12px; background:rgba(30,198,255,0.03); padding:16px 14px; margin-bottom:12px; display:flex; align-items:center; gap:14px; }
+.vp-icon { flex-shrink:0; width:42px; height:42px; border-radius:10px; background:rgba(30,198,255,0.08); border:1px solid rgba(30,198,255,0.2); display:flex; align-items:center; justify-content:center; }
+.vp-clip { font-family:'Rubik',sans-serif; font-weight:700; font-size:10px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.vp-title { font-family:'Rubik',sans-serif; font-weight:700; font-size:13px; color:var(--text); margin-bottom:2px; }
+.vp-meta { font-size:11px; color:var(--text-3); }
+</style>
+</head>
+<body>
+
+<div class="bg-image"></div>
+<div class="bg-grid"></div>
+<div class="bg-blob bg-blob-1"></div>
+<div class="bg-blob bg-blob-2"></div>
+
+<div class="app">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="unit-header">
+    <span class="unit-badge"><span class="badge-dot"></span>יחידה 4 · סייבר</span>
+    <span class="screen-counter" id="screenCounter">1 / 12</span>
+  </div>
+
+  <div class="screens">
+
+  <!-- ══ S0: HOOK ══ -->
+  <div class="screen active" id="s0">
+    <div class="eyebrow">לדבר עם שרתים — HTTP ו-curl</div>
+    <h2 style="font-size:clamp(22px,6vw,32px);line-height:1.15;margin-bottom:8px;">פתחנו את הדלת. עכשיו — מה אומרים לעסק שמאחוריה?</h2>
+    <p style="font-size:14px;color:var(--text-3);margin-bottom:16px;">בעיר הדיגיטלית שלנו: ה-IP הוא הכתובת, הפורט הוא הדלת. אבל כשנכנסים — צריך לדעת לדבר. היום לומדים את השפה.</p>
+
+    <div class="term-block gap">
+      <div class="term-bar"><span class="term-dot td-r"></span><span class="term-dot td-y"></span><span class="term-dot td-g"></span><span class="term-title">Terminal — מה קורה כשנכנסים לאתר</span></div>
+      <div class="term-body">
+        <span class="tc-prompt">$ </span><span class="tc-cmd">curl -v https://example.com</span><br/>
+        <span class="tc-dim">* Connected to example.com port 443</span><br/>
+        <span class="tc-req">&gt; GET / HTTP/2</span><br/>
+        <span class="tc-req">&gt; Host: example.com</span><br/>
+        <span class="tc-dim">...</span><br/>
+        <span class="tc-res">&lt; HTTP/2 200</span><br/>
+        <span class="tc-head">&lt; server: ECS (nyb/1D18)</span><br/>
+        <span class="tc-head">&lt; x-powered-by: PHP/7.1.3</span><br/>
+        <span class="tc-body">&lt;!doctype html&gt;&lt;html&gt;...</span>
+      </div>
+    </div>
+
+    <div class="insight-box">
+      כל שורה שמתחילה ב-<strong style="color:var(--accent);">&gt;</strong> יצאה מהמחשב שלכם. כל שורה שמתחילה ב-<strong style="color:var(--green);">&lt;</strong> חזרה מהשרת. הדפדפן עושה בדיוק את זה — רק מסתיר את זה. ה-header <span class="mono t-red">x-powered-by: PHP/7.1.3</span> אומר לתוקף אילו גרסות רצות שם.
+    </div>
+
+    <p style="font-size:14px;color:var(--text-3);">ביחידה הזו נבין את השפה הזו — ונתנסה לשלוח בקשות ישירות בעצמנו.</p>
+  </div>
+
+  <!-- ══ S1: VIDEO ══ -->
+  <div class="screen" id="s1">
+    <div class="eyebrow">סרטון מבוא</div>
+    <h2 class="section-title">לפני שמתחילים</h2>
+    <div class="card" style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(4,14,28,0.7);">
+      <div style="width:56px;height:56px;border-radius:50%;background:rgba(30,198,255,0.08);border:1px solid rgba(30,198,255,0.25);display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="play" style="width:26px;height:26px;color:var(--accent);margin-right:-3px;"></i>
+      </div>
+      <p style="font-size:13px;color:var(--text-3);">הסרטון יוכנס כאן</p>
+    </div>
+  </div>
+
+  <!-- ══ S2: OBJECTIVES ══ -->
+  <div class="screen" id="s2">
+    <div class="eyebrow">מה נגלה היום</div>
+    <h2 class="section-title">בסוף היחידה תדע:</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px;">5 דברים שתוכל להסביר לחבר</p>
+    <div class="obj-list">
+      <div class="obj-item"><div class="obj-num">1</div><div class="obj-text"><span style="color:var(--text);font-family:'Rubik',sans-serif;font-weight:700;">להסביר</span> מהי שיחת HTTP — מה הלקוח שולח ומה השרת מחזיר</div></div>
+      <div class="obj-item"><div class="obj-num">2</div><div class="obj-text"><span style="color:var(--text);font-family:'Rubik',sans-serif;font-weight:700;">לקרוא</span> בקשת HTTP ולזהות: method, path, host header</div></div>
+      <div class="obj-item"><div class="obj-num">3</div><div class="obj-text"><span style="color:var(--text);font-family:'Rubik',sans-serif;font-weight:700;">לפרש</span> קודי תגובה — 200, 301, 403, 404, 500 — ומה כל אחד אומר לתוקף</div></div>
+      <div class="obj-item"><div class="obj-num">4</div><div class="obj-text"><span style="color:var(--text);font-family:'Rubik',sans-serif;font-weight:700;">להשתמש</span> ב-curl כדי לשלוח בקשה לשרת ולקרוא תגובה — בעצמך</div></div>
+      <div class="obj-item"><div class="obj-num">5</div><div class="obj-text"><span style="color:var(--text);font-family:'Rubik',sans-serif;font-weight:700;">להסביר</span> למה headers של שרת עשויים לחשוף מידע שימושי לתוקף</div></div>
+    </div>
+  </div>
+
+  <!-- ══ S3: HTTP DIALOGUE ══ -->
+  <div class="screen" id="s3">
+    <div class="eyebrow">חלק 1 — שפת הרשת</div>
+    <h2 class="section-title">HTTP — שיחה, לא קסם</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px;">כשהדפדפן נכנס לאתר הוא לא עושה קסמים. הוא שולח <strong style="color:var(--text);">הודעת טקסט</strong> לשרת, והשרת עונה בטקסט חזרה.</p>
+
+    <div class="http-convo gap">
+      <div class="http-msg req">
+        <span class="http-side s-req">לקוח</span>
+        <div class="http-text">GET /index.html HTTP/1.1<br/>Host: www.example.com<br/>User-Agent: Mozilla/5.0</div>
+      </div>
+      <div style="text-align:center;color:var(--text-3);font-size:20px;padding:2px 0;">↓</div>
+      <div class="http-msg res">
+        <span class="http-side s-res">שרת</span>
+        <div class="http-text">HTTP/1.1 200 OK<br/>Content-Type: text/html<br/><br/>&lt;!DOCTYPE html&gt;...</div>
+      </div>
+    </div>
+
+    <div class="concept-pill gap">
+      בעיר הדיגיטלית שלנו: ה-IP מכוון לבניין, הפורט פותח את הדלת הנכונה — ו-<strong>HTTP הוא מה שאומרים</strong> לעסק שמאחורי הדלת. בלי HTTP, גם אם הגעתם לדלת הנכונה — אין שיחה.
+    </div>
+
+    <div class="insight-box yellow">
+      <strong style="color:var(--text);">למה טקסט?</strong> HTTP תוכנן ב-1991 כדי שאנשים יוכלו לקרוא ולכתוב אותו ישירות — בלי כלים מיוחדים. זו הסיבה שאנחנו יכולים לשלוח HTTP ביד, עם כלי פשוט כמו curl.
+    </div>
+  </div>
+
+  <!-- ══ S4: CLIP 1 ══ -->
+  <div class="screen" id="s4" style="justify-content:center;align-items:center;gap:14px;">
+    <div style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">קליפ 1</div>
+      <h2 class="section-title" style="margin-bottom:0;">curl -v בטרמינל אמיתי</h2>
+    </div>
+    <iframe style="height:min(65dvh,460px);aspect-ratio:9/16;border-radius:14px;border:1px solid var(--border);display:block;" src="https://app.heygen.com/embeds/70870487f96540908a8ae62afd4225db" title="HeyGen video player" frameborder="0" allow="encrypted-media; fullscreen;" allowfullscreen></iframe>
+    <p style="font-size:13px;color:var(--text-3);text-align:center;max-width:300px;line-height:1.5;">כל שורה שמתחילה ב-&gt; יצאה מכם. כל שורה שמתחילה ב-&lt; חזרה מהשרת.</p>
+  </div>
+
+  <!-- ══ S5: REQUEST ANATOMY ══ -->
+  <div class="screen" id="s5">
+    <div class="eyebrow">חלק 2 — הבקשה</div>
+    <h2 class="section-title">מה יש בבקשה?</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:12px;">לחצו על כל שורה להסבר</p>
+
+    <div class="term-block gap">
+      <div class="term-bar"><span class="term-dot td-r"></span><span class="term-dot td-y"></span><span class="term-dot td-g"></span><span class="term-title">HTTP Request</span></div>
+      <div style="padding:4px 0;">
+        <div class="ann-line hl" style="color:#7EC8FF;" onclick="toggleAnn('a1')">GET /login HTTP/1.1</div>
+        <div class="ann-pop" id="a1"><strong style="color:var(--accent);">Method + Path + Version</strong> — <span style="color:var(--green);">GET</span> = "תן לי", <span style="color:var(--green);">/login</span> = הדף המבוקש, <span style="color:var(--green);">HTTP/1.1</span> = גרסת הפרוטוקול. השרת קורא את זה ומבין מה רוצים ממנו.</div>
+
+        <div class="ann-line" style="color:#D4B8FF;" onclick="toggleAnn('a2')">Host: accounts.google.com</div>
+        <div class="ann-pop" id="a2"><strong style="color:var(--accent);">Host header</strong> — שרת אחד יכול לארח עשרות אתרים על אותו IP. ה-Host אומר לשרת מי מהם צריך לענות עכשיו. בלי Host — השרת לא יודע לאיזה "עסק" בבניין פונים.</div>
+
+        <div class="ann-line" style="color:#D4B8FF;" onclick="toggleAnn('a3')">User-Agent: Mozilla/5.0 (Windows NT)</div>
+        <div class="ann-pop" id="a3"><strong style="color:var(--accent);">User-Agent</strong> — מי שולח את הבקשה: דפדפן, בוט, curl. שרתים יכולים לחסום גישה על בסיס ה-User-Agent. תוקף שרוצה להסתתר ישנה אותו.</div>
+
+        <div class="ann-line" style="color:#D4B8FF;" onclick="toggleAnn('a4')">Cookie: session=abc123xyz</div>
+        <div class="ann-pop" id="a4"><strong style="color:var(--accent);">Cookie</strong> — מזהה הסשן שלכם. מי שמצליח לגנוב את ה-Cookie — מתחבר בתור שלכם, בלי שם משתמש וסיסמה. זהו Session Hijacking.</div>
+
+        <div class="ann-line" style="color:rgba(30,198,255,0.3);">(שורה ריקה — סוף ה-headers)</div>
+      </div>
+    </div>
+
+    <div class="insight-box green">
+      <strong style="color:var(--text);">כל header = מידע.</strong> תוקף שמיירט בקשה למד: דפדפן, מערכת הפעלה, עמוד שמבקשים, ולפעמים — Cookie פעיל. זו הסיבה ש-HTTPS חיוני — הוא מצפין את כל זה.
+    </div>
+  </div>
+
+  <!-- ══ S6: RESPONSE ANATOMY ══ -->
+  <div class="screen" id="s6">
+    <div class="eyebrow">חלק 3 — התגובה</div>
+    <h2 class="section-title">מה השרת מחזיר?</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:12px;">לחצו על כל שורה להסבר — שימו לב במיוחד לאדום</p>
+
+    <div class="term-block gap">
+      <div class="term-bar"><span class="term-dot td-r"></span><span class="term-dot td-y"></span><span class="term-dot td-g"></span><span class="term-title">HTTP Response</span></div>
+      <div style="padding:4px 0;">
+        <div class="ann-line hl-res" style="color:#A8FFD8;" onclick="toggleAnn('b1')">HTTP/1.1 200 OK</div>
+        <div class="ann-pop" id="b1"><strong style="color:var(--green);">Status Line</strong> — גרסת HTTP + קוד תגובה + הסבר. הקוד הוא מה שמעניין: 200 = הצלחה. בהמשך נכיר את כולם.</div>
+
+        <div class="ann-line" style="color:#D4B8FF;" onclick="toggleAnn('b2')">Content-Type: text/html; charset=UTF-8</div>
+        <div class="ann-pop" id="b2"><strong style="color:var(--accent);">Content-Type</strong> — מה סוג התוכן שחוזר. text/html לדפים, application/json ל-API. הדפדפן משתמש בזה כדי לדעת איך להציג את הגוף.</div>
+
+        <div class="ann-line" style="color:var(--orange);" onclick="toggleAnn('b3')">Server: Apache/2.4.29 (Ubuntu)</div>
+        <div class="ann-pop" id="b3"><strong style="color:var(--orange);">⚠ Server header</strong> — השרת חושף את שמו וגרסתו. Apache 2.4.29 = גרסה ספציפית = CVEs ידועים. תוקף יחפש חולשות עבורה. שרת מאובטח מסיר את ה-header הזה.</div>
+
+        <div class="ann-line" style="color:var(--red);" onclick="toggleAnn('b4')">X-Powered-By: PHP/7.1.3</div>
+        <div class="ann-pop" id="b4"><strong style="color:var(--red);">✕ X-Powered-By</strong> — חשיפה גדולה. PHP 7.1.3 שיצאה ב-2017 — לא מקבלת עדכוני אבטחה מ-2019. תוקף שמוצא זאת יחפש exploits ל-PHP 7.1. אין שום סיבה להשאיר header זה.</div>
+
+        <div class="ann-line" style="color:rgba(30,198,255,0.3);">(שורה ריקה — תחילת גוף התגובה)</div>
+        <div class="ann-line" style="color:rgba(255,255,255,0.4);">&lt;!DOCTYPE html&gt;&lt;html&gt;...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S7: STATUS CODES ══ -->
+  <div class="screen" id="s7">
+    <div class="eyebrow">קודי תגובה</div>
+    <h2 class="section-title">מה אמר השרת?</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px;">לחצו על כל קוד — כולל הזווית הביטחונית</p>
+
+    <div class="status-card" onclick="toggleStatus(this)">
+      <div class="status-header"><div class="status-code t-green">200</div><div><div class="status-name">OK</div><div class="status-sub">הבקשה הצליחה</div></div><span class="status-chevron">›</span></div>
+      <div class="status-detail">השרת מצא את מה שביקשתם. מנקודת מבט סייבר: 200 = פורט פתוח + שירות פעיל. כלי סריקה מחפשים 200 כדי לזהות נקודות כניסה.</div>
+    </div>
+    <div class="status-card" onclick="toggleStatus(this)">
+      <div class="status-header"><div class="status-code t-yellow">301</div><div><div class="status-name">Moved Permanently</div><div class="status-sub">הועבר לכתובת חדשה</div></div><span class="status-chevron">›</span></div>
+      <div class="status-detail">השרת מחזיר <span class="mono">Location:</span> עם הכתובת החדשה. ככה http:// מפנה אתכם ל-https:// אוטומטית. דפדפן עוקב לבד, curl דורש <span class="mono">-L</span>.</div>
+    </div>
+    <div class="status-card" onclick="toggleStatus(this)">
+      <div class="status-header"><div class="status-code t-orange">403</div><div><div class="status-name">Forbidden</div><div class="status-sub">גישה נדחתה</div></div><span class="status-chevron">›</span></div>
+      <div class="status-detail">השרת הבין את הבקשה — וסירב. <strong style="color:var(--text);">חשוב:</strong> 403 מאשר שהמשאב קיים. תוקף שמקבל 403 על <span class="mono">/admin</span> יודע שיש שם עמוד — רק שחסום. 404 היה עדיף מביטחוני.</div>
+    </div>
+    <div class="status-card" onclick="toggleStatus(this)">
+      <div class="status-header"><div class="status-code t-red">404</div><div><div class="status-name">Not Found</div><div class="status-sub">הדף לא קיים</div></div><span class="status-chevron">›</span></div>
+      <div class="status-detail">הדף לא קיים בשרת. כלי סריקה מנסים אלפי נתיבים (<span class="mono">/admin</span>, <span class="mono">/.env</span>, <span class="mono">/backup.zip</span>) ומחפשים 200 במקום 404. אפשר ללמוד הרבה על מבנה האתר.</div>
+    </div>
+    <div class="status-card" onclick="toggleStatus(this)">
+      <div class="status-header"><div class="status-code" style="color:#B47AFF;">500</div><div><div class="status-name">Internal Server Error</div><div class="status-sub">הקוד קרס</div></div><span class="status-chevron">›</span></div>
+      <div class="status-detail">קוד הצד השרת קרס. לפעמים חושף stack trace עם שמות קבצים, שורות קוד, גרסאות ספריות. מידע יקר לתוקף שרוצה להבין את הארכיטקטורה הפנימית.</div>
+    </div>
+  </div>
+
+  <!-- ══ S8: TERMINAL SIMULATOR ══ -->
+  <div class="screen" id="s8">
+    <div class="eyebrow">חלק 4 — נסו בעצמכם</div>
+    <h2 class="section-title">curl — שלחו בקשה בעצמכם</h2>
+
+    <div class="activity-banner">
+      <div class="activity-tag"><i data-lucide="terminal" style="width:11px;height:11px;"></i> סימולטור טרמינל</div>
+      <div class="activity-instruction">הקלידו פקודת curl או לחצו על אחד הכפתורים למטה</div>
+    </div>
+
+    <div class="hint-row">
+      <button class="hint-btn" onclick="fillCmd('curl https://example.com')">curl https://example.com</button>
+      <button class="hint-btn" onclick="fillCmd('curl -I https://example.com')">curl -I</button>
+      <button class="hint-btn" onclick="fillCmd('curl -v https://example.com')">curl -v</button>
+      <button class="hint-btn" onclick="fillCmd('curl https://httpbin.org/status/404')">404 test</button>
+    </div>
+
+    <div class="sim-wrap">
+      <div class="sim-bar"><span class="term-dot td-r"></span><span class="term-dot td-y"></span><span class="term-dot td-g"></span><span class="term-title" style="margin-right:auto;">Terminal Simulator</span></div>
+      <div class="sim-output" id="simOutput">
+        <span style="color:rgba(127,155,179,0.6);">הקלד פקודה ולחץ Enter, או לחץ על אחד הכפתורים למעלה</span>
+      </div>
+      <div class="sim-input-row">
+        <span class="tc-prompt">$ </span>
+        <input class="sim-input" id="simInput" type="text" placeholder="curl https://..." autocomplete="off" spellcheck="false" onkeydown="simKeyDown(event)"/>
+      </div>
+    </div>
+
+    <div class="concept-pill" style="margin-bottom:0;">
+      <strong>curl</strong> קיים בכל Mac, Linux, ו-Windows 10+. כלי אחד — אינסוף שימושים: מפתחים, מנהלי שרתים, חוקרי אבטחה. הוא עושה בדיוק מה שהדפדפן עושה — רק חושף הכול.
+    </div>
+  </div>
+
+  <!-- ══ S9: CLIP 2 ══ -->
+  <div class="screen" id="s9" style="justify-content:center;align-items:center;gap:14px;">
+    <div style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">קליפ 2</div>
+      <h2 class="section-title" style="margin-bottom:0;">DevTools לעומת curl</h2>
+    </div>
+    <iframe style="height:min(65dvh,460px);aspect-ratio:9/16;border-radius:14px;border:1px solid var(--border);display:block;" src="https://app.heygen.com/embeds/f5e745be32c544978ed5a4c11a6e27cf" title="HeyGen video player" frameborder="0" allow="encrypted-media; fullscreen;" allowfullscreen></iframe>
+    <p style="font-size:13px;color:var(--text-3);text-align:center;max-width:300px;line-height:1.5;">הדפדפן ו-curl עושים בדיוק אותו דבר. הדפדפן מסתיר — curl מראה הכל.</p>
+  </div>
+
+  <!-- ══ S10: CURL -V ANNOTATED ══ -->
+  <div class="screen" id="s10">
+    <div class="eyebrow">מתחת לפני השטח</div>
+    <h2 class="section-title">curl -v — לראות את השיחה המלאה</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:12px;">הפלג <span class="mono t-accent">-v</span> חושף הכל. לחצו על כל קטע.</p>
+
+    <div class="term-block">
+      <div class="term-bar"><span class="term-dot td-r"></span><span class="term-dot td-y"></span><span class="term-dot td-g"></span><span class="term-title">curl -v https://example.com</span></div>
+      <div style="padding:4px 0;">
+        <div class="ann-line" style="color:rgba(168,216,255,0.4);" onclick="toggleAnn('v1')">* Connected to example.com port 443</div>
+        <div class="ann-pop" id="v1"><strong style="color:var(--accent);">חיבור + TLS</strong> — לפני שנשלחת מילה, curl מצא את ה-IP, התחבר לפורט 443, ועשה לחיצת יד TLS שמצפינה את כל מה שיבוא אחריה.</div>
+
+        <div class="ann-line hl" style="color:#7EC8FF;" onclick="toggleAnn('v2')">&gt; GET / HTTP/2<br/><span style="padding-right:0;">&gt; Host: example.com</span><br/><span>&gt; user-agent: curl/8.1.2</span></div>
+        <div class="ann-pop" id="v2"><strong style="color:var(--accent);">הבקשה שלנו (&gt;)</strong> — כל שורה שמתחילה ב-&gt; יצאה מהמחשב שלנו. זו בדיוק הבקשה שדפדפן שולח בכל ניווט לאתר.</div>
+
+        <div class="ann-line hl-res" style="color:#A8FFD8;" onclick="toggleAnn('v3')">&lt; HTTP/2 200<br/><span>&lt; content-type: text/html</span><br/><span>&lt; server: ECS (nyb/1D18)</span></div>
+        <div class="ann-pop" id="v3"><strong style="color:var(--green);">התגובה מהשרת (&lt;)</strong> — 200 OK, השרת מזהה את עצמו. כל מה שמתחיל ב-&lt; הגיע מהשרת. כאן רואים את ה-headers שדפדפן מסתיר מכם.</div>
+
+        <div class="ann-line" style="color:rgba(255,255,255,0.4);" onclick="toggleAnn('v4')">&lt;!doctype html&gt;&lt;html&gt;...</div>
+        <div class="ann-pop" id="v4"><strong style="color:var(--text-3);">גוף התגובה</strong> — ה-HTML שהדפדפן מפרש ומציג. curl מדפיס אותו גולמי. זה בדיוק מה שהדפדפן מקבל לפני שהוא "מצייר" אותו.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S11: SECURITY CONTEXT ══ -->
+  <div class="screen" id="s11">
+    <div class="eyebrow">זווית ביטחונית</div>
+    <h2 class="section-title">מה שרתים מגלים על עצמם</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px;">אנשי סייבר משתמשים ב-curl כצעד ראשון בסיור — לפני שנוגעים בכלום</p>
+
+    <div class="card gap">
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(30,198,255,0.15);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Rubik',sans-serif;font-weight:900;font-size:12px;">1</div>
+        <div><div style="font-family:'Rubik',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px;">זיהוי גרסאות תוכנה</div><div style="font-size:13px;color:var(--text-3);line-height:1.5;"><span class="mono">curl -I</span> חושף לעיתים Server + X-Powered-By. גרסה ספציפית = CVEs ידועים.</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(255,215,0,0.15);color:var(--yellow);display:flex;align-items:center;justify-content:center;font-family:'Rubik',sans-serif;font-weight:900;font-size:12px;">2</div>
+        <div><div style="font-family:'Rubik',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px;">בדיקת נקודות כניסה</div><div style="font-size:13px;color:var(--text-3);line-height:1.5;">סריקה של נתיבים: <span class="mono">/admin</span>, <span class="mono">/.env</span>, <span class="mono">/backup.zip</span>. 200 = נמצא, 404 = לא קיים.</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(255,140,66,0.15);color:var(--orange);display:flex;align-items:center;justify-content:center;font-family:'Rubik',sans-serif;font-weight:900;font-size:12px;">3</div>
+        <div><div style="font-family:'Rubik',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px;">בדיקת headers אבטחה חסרים</div><div style="font-size:13px;color:var(--text-3);line-height:1.5;">האם יש <span class="mono">X-Frame-Options</span>? <span class="mono">Content-Security-Policy</span>? העדרם = חולשות ידועות.</div></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;">
+        <div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(255,80,80,0.18);color:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Rubik',sans-serif;font-weight:900;font-size:12px;">4</div>
+        <div><div style="font-family:'Rubik',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px;">בדיקת API endpoints</div><div style="font-size:13px;color:var(--text-3);line-height:1.5;">שליחת POST עם JSON לבדוק אם endpoint חשוף, מאמת קלט, או מחזיר שגיאות מפורטות.</div></div>
+      </div>
+    </div>
+
+    <div class="insight-box red">
+      <strong style="color:var(--text);">דוגמה אמיתית:</strong> שרת שמחזיר <span class="mono">X-Powered-By: PHP/5.6.40</span> — PHP 5.6 הגיעה לסוף חיים ב-2018. תוקף שמצא זאת יחפש CVEs ל-PHP 5.6 ויתחיל לנצל אותם. כל זה מ-header אחד.
+    </div>
+  </div>
+
+  <!-- ══ S12: CLIP 3 ══ -->
+  <div class="screen" id="s12" style="justify-content:center;align-items:center;gap:14px;">
+    <div style="text-align:center;">
+      <div class="eyebrow" style="margin-bottom:6px;">קליפ 3</div>
+      <h2 class="section-title" style="margin-bottom:0;">מ-header אחד ל-CVE</h2>
+    </div>
+    <iframe style="height:min(65dvh,460px);aspect-ratio:9/16;border-radius:14px;border:1px solid var(--border);display:block;" src="https://app.heygen.com/embeds/3864e474b26e430cbe4fb23924a41c3d" title="HeyGen video player" frameborder="0" allow="encrypted-media; fullscreen;" allowfullscreen></iframe>
+    <p style="font-size:13px;color:var(--text-3);text-align:center;max-width:300px;line-height:1.5;">header אחד → גרסה ישנה → CVEs ידועים. כך עובד סיור פסיבי.</p>
+  </div>
+
+  <!-- ══ S13: QUIZ ══ -->
+  <div class="screen" id="s13">
+    <div class="eyebrow">בדיקת הבנה</div>
+    <h2 class="section-title">כמה הבנתם?</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:14px;">3 שאלות — ענו על כולן כדי לסיים את היחידה</p>
+
+    <div class="mc-block">
+      <div class="mc-q">שרת מחזיר קוד 403 כשמנסים לגשת ל-<span class="mono">/admin</span>. מה אפשר להסיק?</div>
+      <div class="mc-options" id="q1opts">
+        <button class="mc-opt" onclick="answerQ(1,this,false)">הדף /admin לא קיים בשרת</button>
+        <button class="mc-opt" onclick="answerQ(1,this,true)">הדף קיים — אבל הגישה חסומה למשתמשים לא מורשים</button>
+        <button class="mc-opt" onclick="answerQ(1,this,false)">השרת כבוי ולא מגיב לבקשות</button>
+        <button class="mc-opt" onclick="answerQ(1,this,false)">הבקשה הופנתה לכתובת אחרת</button>
+      </div>
+      <div class="mc-feedback" id="qfb1" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <div class="mc-block">
+      <div class="mc-q">מה ההבדל בין <span class="mono">curl -I</span> ל-<span class="mono">curl -v</span>?</div>
+      <div class="mc-options" id="q2opts">
+        <button class="mc-opt" onclick="answerQ(2,this,false)">\u200E-I מוצפן, \u200E-v לא מוצפן</button>
+        <button class="mc-opt" onclick="answerQ(2,this,true)">\u200E-I מחזיר headers בלבד (HEAD request); \u200E-v מציג את כל השיחה — בקשה + תגובה + headers</button>
+        <button class="mc-opt" onclick="answerQ(2,this,false)">\u200E-I מהיר יותר כי עוקף TLS</button>
+        <button class="mc-opt" onclick="answerQ(2,this,false)">אין הבדל — שניהם זהים</button>
+      </div>
+      <div class="mc-feedback" id="qfb2" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <div class="mc-block">
+      <div class="mc-q">שרת מחזיר <span class="mono t-red">X-Powered-By: PHP/5.6.40</span>. מה הסיכון?</div>
+      <div class="mc-options" id="q3opts">
+        <button class="mc-opt" onclick="answerQ(3,this,false)">זהו header תקני — אין שום בעיה</button>
+        <button class="mc-opt" onclick="answerQ(3,this,false)">הגרסה מספיק חדשה — אין סיכון</button>
+        <button class="mc-opt" onclick="answerQ(3,this,true)">PHP 5.6 לא מקבלת עדכוני אבטחה מ-2018 — חולשות ידועות אפשר לנצל</button>
+        <button class="mc-opt" onclick="answerQ(3,this,false)">זה רק שם הפרוטוקול — לא חושף מידע</button>
+      </div>
+      <div class="mc-feedback" id="qfb3" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <div id="completionMsg" style="display:none;">
+      <div class="check-success">🎯 כל הכבוד! סיימתם את יחידה 4 — עכשיו אתם יודעים לדבר עם שרתים ולהבין מה הם אומרים.</div>
+    </div>
+  </div>
+
+  <!-- ══ S14: SUMMARY + NEXT ══ -->
+  <div class="screen" id="s14">
+    <div class="eyebrow">סיכום</div>
+    <h2 class="section-title">מה למדנו?</h2>
+
+    <div class="summary-points">
+      <div class="summary-point"><div class="sp-icon"><i data-lucide="message-square" style="width:16px;height:16px;color:var(--accent);"></i></div><div class="sp-text"><strong>HTTP הוא שיחת טקסט.</strong> לקוח שולח method + path + headers. שרת עונה עם קוד + headers + גוף. הדפדפן עושה בדיוק את זה — curl פשוט מראה לנו.</div></div>
+      <div class="summary-point"><div class="sp-icon"><i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--yellow);"></i></div><div class="sp-text"><strong>Headers = מידע שחושפים.</strong> Server, X-Powered-By, גרסאות — כל אלה עוזרים לתוקף לזהות חולשות. שרת מאובטח מסיר אותם.</div></div>
+      <div class="summary-point"><div class="sp-icon"><i data-lucide="terminal" style="width:16px;height:16px;color:var(--green);"></i></div><div class="sp-text"><strong>curl הוא כלי יומיומי.</strong> GET, -I לheaders, -v לשיחה מלאה. מפתחים, מנהלי שרתים, חוקרי אבטחה — כולם משתמשים בו.</div></div>
+    </div>
+
+    <div class="section-divider">מה הבא</div>
+    <div class="next-card">
+      <div class="next-icon"><i data-lucide="scan-search" style="width:20px;height:20px;color:var(--accent);"></i></div>
+      <div>
+        <div class="next-label">יחידה 5</div>
+        <div class="next-text">דיברנו עם שרת אחד. בפעם הבאה — נסרוק רשת שלמה. כמה מחשבים פתוחים? אילו שירותים רצים? נכיר את כלי הסריקה שמשמשים את כל אנשי הסייבר בעולם.</div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /screens -->
+
+  <div class="dots" id="dotNav"></div>
+  <div class="nav">
+    <button class="btn btn-back" id="btnBack" onclick="navigate(-1)" style="display:none;">הקודם →</button>
+    <button class="btn btn-primary" id="btnNext" onclick="navigate(1)">← הבא</button>
+  </div>
+</div>
+
+<script>
+// SCORM
+var scormAPI=null;
+function findAPI(w){var t=0;while(!w.API&&w.parent&&w.parent!==w&&t<7){w=w.parent;t++;}return w.API||null;}
+try{scormAPI=findAPI(window);}catch(e){}
+function scormSet(k,v){try{if(scormAPI)scormAPI.LMSSetValue(k,v);}catch(e){}}
+function scormInit(){try{if(scormAPI){scormAPI.LMSInitialize('');scormSet('cmi.core.lesson_status','incomplete');}}catch(e){}}
+function scormComplete(){try{if(scormAPI){scormSet('cmi.core.lesson_status','completed');scormSet('cmi.core.score.raw','100');scormAPI.LMSCommit('');scormAPI.LMSFinish('');}}catch(e){}}
+scormInit();
+
+// Navigation
+var TOTAL=15, current=0;
+var pFill=document.getElementById('progressFill');
+var btnBack=document.getElementById('btnBack');
+var btnNext=document.getElementById('btnNext');
+var counter=document.getElementById('screenCounter');
+function buildDots(){
+  var nav=document.getElementById('dotNav');
+  for(var i=0;i<TOTAL;i++){
+    var d=document.createElement('button');
+    d.className='dot'+(i===0?' active':'');
+    (function(idx){d.onclick=function(){goToScreen(idx);};})(i);
+    nav.appendChild(d);
+  }
+}
+function updateNav(){
+  btnBack.style.display=current===0?'none':'block';
+  btnNext.textContent=current===TOTAL-1?'סיום ✓':'← הבא';
+  pFill.style.width=((current+1)/TOTAL*100)+'%';
+  counter.textContent=(current+1)+' / '+TOTAL;
+  document.querySelectorAll('.dot').forEach(function(d,i){d.classList.toggle('active',i===current);});
+}
+function goToScreen(n){
+  if(n<0||n>=TOTAL||n===current)return;
+  var prev=document.getElementById('s'+current);
+  var nxt=document.getElementById('s'+n);
+  prev.classList.add('exit');prev.classList.remove('active');
+  setTimeout(function(){prev.classList.remove('exit');nxt.classList.add('active');current=n;updateNav();},220);
+}
+function navigate(dir){
+  if(dir===1&&current===TOTAL-1){scormComplete();return;}
+  goToScreen(current+dir);
+}
+
+// Annotations
+function toggleAnn(id){
+  var el=document.getElementById(id);
+  if(el)el.classList.toggle('show');
+}
+
+// Status accordion
+function toggleStatus(el){el.classList.toggle('open');}
+
+// ── Terminal Simulator ──
+var simData={
+  'curl https://example.com':[
+    {c:'tc-dim', t:'  % Total    % Received % Xferd'},
+    {c:'tc-dim', t:'100  1256  100  1256    0     0  12560      0'},
+    {c:'tc-body',t:'<!doctype html>'},
+    {c:'tc-body',t:'<html>'},
+    {c:'tc-body',t:'<head>'},
+    {c:'tc-body',t:'    <title>Example Domain</title>'},
+    {c:'tc-body',t:'</head>'},
+    {c:'tc-body',t:'<body>'},
+    {c:'tc-body',t:'<h1>Example Domain</h1>'},
+    {c:'tc-body',t:'<p>This domain is for use in illustrative examples...</p>'},
+    {c:'tc-body',t:'</body></html>'}
+  ],
+  'curl -i https://example.com':[
+    {c:'tc-res', t:'HTTP/2 200'},
+    {c:'tc-head',t:'content-type: text/html; charset=UTF-8'},
+    {c:'tc-head',t:'server: ECS (nyb/1D18)'},
+    {c:'tc-head',t:'content-length: 1256'},
+    {c:'tc-dim', t:''},
+    {c:'tc-body',t:'<!doctype html><html>...'}
+  ],
+  'curl -i https://example.com ':[
+    {c:'tc-res', t:'HTTP/2 200'},
+    {c:'tc-head',t:'content-type: text/html; charset=UTF-8'},
+    {c:'tc-head',t:'server: ECS (nyb/1D18)'},
+    {c:'tc-dim', t:''},
+    {c:'tc-body',t:'<!doctype html><html>...'}
+  ],
+  'curl -I https://example.com':[
+    {c:'tc-res', t:'HTTP/2 200'},
+    {c:'tc-head',t:'content-type: text/html; charset=UTF-8'},
+    {c:'tc-head',t:'server: ECS (nyb/1D18)'},
+    {c:'tc-head',t:'last-modified: Thu, 17 Oct 2019 07:18:26 GMT'},
+    {c:'tc-head',t:'content-length: 1256'},
+    {c:'tc-head',t:'x-cache: HIT'}
+  ],
+  'curl -v https://example.com':[
+    {c:'tc-dim', t:'*   Trying 93.184.216.34:443...'},
+    {c:'tc-dim', t:'* Connected to example.com port 443'},
+    {c:'tc-dim', t:'* SSL handshake done. Using TLS 1.3'},
+    {c:'tc-req', t:'> GET / HTTP/2'},
+    {c:'tc-req', t:'> Host: example.com'},
+    {c:'tc-req', t:'> user-agent: curl/8.1.2'},
+    {c:'tc-dim', t:'> '},
+    {c:'tc-res', t:'< HTTP/2 200'},
+    {c:'tc-res', t:'< content-type: text/html; charset=UTF-8'},
+    {c:'tc-head',t:'< server: ECS (nyb/1D18)'},
+    {c:'tc-head',t:'< x-cache: HIT'},
+    {c:'tc-dim', t:'< '},
+    {c:'tc-body',t:'<!doctype html><html>...'}
+  ],
+  'curl https://httpbin.org/status/404':[
+    {c:'tc-err', t:'curl: (22) The requested URL returned error: 404'},
+    {c:'tc-dim', t:''},
+    {c:'tc-dim', t:'טיפ: הוסף -I כדי לראות את ה-headers המלאים'},
+    {c:'tc-dim', t:'       curl -I https://httpbin.org/status/404'}
+  ]
+};
+
+function fillCmd(cmd){
+  var inp=document.getElementById('simInput');
+  inp.value=cmd;
+  inp.focus();
+}
+
+function simKeyDown(e){
+  if(e.key==='Enter'){
+    var cmd=document.getElementById('simInput').value.trim();
+    runSimCmd(cmd);
+    document.getElementById('simInput').value='';
+  }
+}
+
+function runSimCmd(cmd){
+  var out=document.getElementById('simOutput');
+  var key=cmd.toLowerCase().replace(/\s+/g,' ').trim();
+
+  // Add the command line
+  var cmdLine=document.createElement('div');
+  cmdLine.innerHTML='<span class="tc-prompt">$ </span><span class="tc-cmd">'+escHtml(cmd)+'</span>';
+  out.appendChild(cmdLine);
+
+  var lines=simData[key]||simData[cmd]||null;
+
+  if(!lines){
+    // Try partial match
+    for(var k in simData){
+      if(k.indexOf(key)===0||key.indexOf(k)===0){lines=simData[k];break;}
+    }
+  }
+
+  if(!lines){
+    var errLine=document.createElement('div');
+    if(cmd===''){
+      errLine.innerHTML='<span class="tc-dim">↑ הקלד פקודה ולחץ Enter</span>';
+    } else if(cmd.indexOf('curl')!==0){
+      errLine.innerHTML='<span class="tc-err">command not found: '+escHtml(cmd.split(' ')[0])+'</span><br/><span class="tc-dim">נסה: curl https://example.com</span>';
+    } else {
+      errLine.innerHTML='<span class="tc-warn">הפקודה לא מוכרת בסימולטור.</span><br/><span class="tc-dim">פקודות זמינות: curl https://example.com | curl -I | curl -v | curl https://httpbin.org/status/404</span>';
+    }
+    out.appendChild(errLine);
+    out.scrollTop=out.scrollHeight;
+    return;
+  }
+
+  var delay=0;
+  lines.forEach(function(line){
+    setTimeout(function(){
+      var el=document.createElement('div');
+      el.className=line.c;
+      el.textContent=line.t;
+      out.appendChild(el);
+      out.scrollTop=out.scrollHeight;
+    },delay);
+    delay+=60;
+  });
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Quiz
+var qCorrectIdx={1:1,2:1,3:2};
+var qFb={
+  1:{ok:'נכון! 403 = "אתה לא מורשה" — הדף קיים. 404 היה אומר שלא קיים שם כלום. ההבדל חשוב לתוקף שרוצה לדעת מה קיים.',err:'לא הפעם. 403 = הדף קיים אבל הגישה נחסמה. 404 = הדף לא קיים. זה הבדל קריטי.'},
+  2:{ok:'בדיוק! -I = HEAD request, מחזיר headers בלבד. -v = verbose, מציג את כל השיחה כולל מה שנשלח (>).',err:'לא הפעם. -I שולח HEAD request ומחזיר headers בלי גוף. -v = verbose — מציג את כל פרטי הבקשה והתגובה.'},
+  3:{ok:'נכון! PHP 5.6 הגיעה לסוף חיים ב-2018 — אין עוד תיקוני אבטחה. חולשות שהתגלו אחרי אותה תאריך — לא תוקנו לעולם.',err:'לא הפעם. PHP 5.6 לא מקבלת עדכונים מ-2018. גרסה ישנה = חולשות ידועות שאי אפשר לתקן.'}
+};
+function answerQ(qnum,btn,isCorrect){
+  var opts=document.getElementById('q'+qnum+'opts');
+  if(opts.dataset.done)return;
+  opts.dataset.done='1';
+  var all=Array.from(opts.querySelectorAll('.mc-opt'));
+  all.forEach(function(b,i){b.disabled=true;if(i===qCorrectIdx[qnum])b.classList.add(isCorrect&&b===btn?'correct':'reveal');});
+  if(!isCorrect)btn.classList.add('wrong');
+  else btn.classList.add('correct');
+  var fb=document.getElementById('qfb'+qnum);
+  fb.style.display='block';fb.className='mc-feedback '+(isCorrect?'ok':'err');
+  fb.textContent=isCorrect?qFb[qnum].ok:qFb[qnum].err;
+  var done={1:false,2:false,3:false};
+  done[qnum]=isCorrect;
+  // check all answered (not just correct)
+  var allAnswered=document.getElementById('q1opts').dataset.done&&document.getElementById('q2opts').dataset.done&&document.getElementById('q3opts').dataset.done;
+  if(allAnswered){document.getElementById('completionMsg').style.display='block';scormComplete();}
+}
+
+buildDots();
+updateNav();
+lucide.createIcons();
+</script>
+</body>
+</html>
