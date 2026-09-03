@@ -87,7 +87,7 @@ id: 881513d5-fa9f-4d47-aa64-1942d7a0f424
 | התנהלות כלכלית חטב | `courses/התנהלות כלכלית חטב/` | 🔄 בפיתוח |
 | CapCut קראש קורס | `courses/capcut-crash-course/` | ✅ 10 יחידות · וידאו ביוטיוב · דף נחיתה פומבי · חובר ל-TeachPal |
 | קנבה, מרעיון לתוצר | `courses/Canva/` | 🔄 4 יחידות וידאו · שלד לומדה מוכן · ממתין לקישורי הטמעה (YouTube/Vimeo) |
-| קוראים חכמים, מהדורה חרדית | `courses/hebrew-haredi/` | 🔄 **גרסת בנים בעבודה** · הלקוחה ביקשה קורס בלי אף דמות נשית · הקוד, הטקסט והניקוד הומרו ואומתו · נותרו 19 תמונות לייצור ב-Codex · ריפו **פרטי** github.com/ZSchool-contact/smart-readers-haredi · 🌐 לינק תצוגה **פתוח באוויר** ומציג את הגרסה הישנה · ⚠️ ראו courses/hebrew-haredi/RUNBOOK.md |
+| קוראים חכמים, מהדורה חרדית | `courses/hebrew-haredi/` | ✅ **גרסת בנים מוכנה** · בלי אף דמות נשית · קוד, טקסט, ניקוד ו-19 תמונות · E2E עובר · ZIP נבנה מחדש (17.7MB, לא נשלח) · ריפו **פרטי** github.com/ZSchool-contact/smart-readers-haredi · 🔴 לינק תצוגה **פתוח באוויר ומציג את הגרסה הישנה** · ⚠️ ראו courses/hebrew-haredi/RUNBOOK.md |
 | קוראים חכמים · הצעד הראשון (א׳–ב׳) | `courses/hebrew-first-grade/` | 🔄 בפיתוח · מפגש 1 שלם עם קול וקליפ פרס · ריפו **פרטי** github.com/ZSchool-contact/smart-readers-first-step · 🌐 לינק תצוגה **פתוח באוויר** שצריך להוריד בסיום · ⚠️ ראו courses/hebrew-first-grade/PROJECT-STATUS.md |
 | קוראים חכמים | `courses/hebrew/` | ✅ **הקורס שלם ומאויר במלואו!** 8 יחידות תוכן + עולם משחק (דרקון, חנות, מפה) · 12 סוגי משחקונים · פתוח: יחידה 0 מלאה, Supabase, חיבור TeachPal · ריפו github.com/ZSchool-contact/smart-readers · ראו courses/hebrew/PROJECT-STATUS.md |
 
